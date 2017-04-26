@@ -1,3 +1,4 @@
+using MiaPlaza.ExpressionUtils.Evaluating;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,20 +17,34 @@ namespace MiaPlaza.ExpressionUtils.Expanding {
 	/// according to that expander.
 	/// </summary>
 	public class ExpressionExpanderVisitor : ExpressionVisitor {
-		public static Expression Expand(Expression expr) {
-			return instance.Visit(expr);
-		}
+		/// <summary>
+		/// Expands the given expression.
+		/// </summary>
+		/// <param name="evaluator">An evaluator that can be used by the custom 
+		/// <see cref="ExpressionExpander{EXP}"/>s</param>
+		public static Expression Expand(Expression expr, IExpressionEvaluator evaluator) 
+			=> new ExpressionExpanderVisitor(evaluator).Visit(expr);
 
-		public static LambdaExpression ExpandBody(LambdaExpression expr) {
-			return Expression.Lambda(Expand(expr.Body), expr.Parameters);
-		}
+		/// <summary>
+		/// Expands the given expression.
+		/// </summary>
+		/// <param name="evaluator">An evaluator that can be used by the custom 
+		/// <see cref="ExpressionExpander{EXP}"/>s</param>
+		public static LambdaExpression ExpandBody(LambdaExpression expr, IExpressionEvaluator evaluator) 
+			=> Expression.Lambda(Expand(expr.Body, evaluator), expr.Parameters);
 
-		public static Expression<D> ExpandBody<D>(Expression<D> expr) {
-			return expr.Update(Expand(expr.Body), expr.Parameters);
+		/// <summary>
+		/// Expands the given expression.
+		/// </summary>
+		/// <param name="evaluator">An evaluator that can be used by the custom 
+		/// <see cref="ExpressionExpander{EXP}"/>s</param>
+		public static Expression<D> ExpandBody<D>(Expression<D> expr, IExpressionEvaluator evaluator) 
+			=> expr.Update(Expand(expr.Body, evaluator), expr.Parameters);
+
+		private ExpressionExpanderVisitor(IExpressionEvaluator evaluator) {
+			this.evaluator = evaluator;
 		}
-		
-		private static readonly ExpressionExpanderVisitor instance = new ExpressionExpanderVisitor();
-		private ExpressionExpanderVisitor() { }
+		private readonly IExpressionEvaluator evaluator;
 
 		protected override Expression VisitMethodCall(MethodCallExpression node) {
 			var attr = node.Method.GetCustomAttribute<Attributes.ExpressionExpandableMethodAttribute>(inherit: false);
@@ -45,7 +60,7 @@ namespace MiaPlaza.ExpressionUtils.Expanding {
 			Expression customExpanded;
 			try {
 				// Expand node itself
-				customExpanded = attr.CustomExpander.Expand(node);
+				customExpanded = attr.CustomExpander.Expand(node, evaluator);
 			} catch (Exception e) {
 				return ExceptionClosure.MakeExceptionClosureCall(
 					CustomExpanderException.Create(
@@ -76,7 +91,7 @@ namespace MiaPlaza.ExpressionUtils.Expanding {
 			Expression customExpanded;
 			try {
 				// Expand node itself
-				customExpanded = attr.CustomExpander.Expand(node);
+				customExpanded = attr.CustomExpander.Expand(node, evaluator);
 			} catch (Exception e) {
 				return ExceptionClosure.MakeExceptionClosureCall(
 					CustomExpanderException.Create(

@@ -15,7 +15,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 
 		[SetUp]
 		public void SetEvaluator() {
-			ExpandingExtensions.Evaluator = ExpressionInterpreter.Instance;
+			ExpandingExtensions.SetEvaluator(ExpressionInterpreter.Instance);
 		}
 
 		[Test]

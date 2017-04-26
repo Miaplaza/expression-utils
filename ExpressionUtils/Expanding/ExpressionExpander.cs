@@ -1,3 +1,4 @@
+using MiaPlaza.ExpressionUtils.Evaluating;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,6 @@ namespace MiaPlaza.ExpressionUtils.Expanding {
 	/// Rewrites an expression of type <see cref="EXP"/> to another expression.
 	/// </summary>
 	public abstract class ExpressionExpander<EXP> where EXP : Expression {
-		public abstract Expression Expand(EXP expr);
+		public abstract Expression Expand(EXP expr, IExpressionEvaluator evaluator);
 	}
 }
