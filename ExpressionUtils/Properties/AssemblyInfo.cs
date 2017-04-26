@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("ExpressionUtils")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Efficient Processing, Compilation, and Execution of Expression Trees at Runtime")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("MiaPlaza")]
 [assembly: AssemblyProduct("MiaPlaza.ExpressionUtils.Properties")]
 [assembly: AssemblyCopyright("Copyright ©  2017")]
 [assembly: AssemblyTrademark("")]
