@@ -56,13 +56,15 @@ var isMultipleOfTwoExpression = PartialEvaluator.PartialEvalBody(
     modulExpression,
     ExpressionInterpreter.Instance);
 
+Expression<Func<int, bool>> isEvenExpression = x => x % 2 == 0;
+
+Console.Write(isEvenExpression.StructuralIdentical(modulExpression)); // false
+Console.Write(isEvenExpression.StructuralIdentical(isMultipleOfTwoExpression)); // true
+
 modul = 3;
 var isMultipleOfThreeExpression = PartialEvaluator.PartialEvalBody(
     modulExpression,
     ExpressionInterpreter.Instance);
 
-Expression<Func<int, bool>> isEvenExpression = x => x % 2 == 0;
-
-Console.Write(isEvenExpression.StructuralIdentical(isMultipleOfTwoExpression)); // true
 Console.Write(isEvenExpression.StructuralIdentical(isMultipleOfThreeExpression)); // false
 ```
