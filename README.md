@@ -1,11 +1,11 @@
 ﻿# Processing, Compilation, and Execution of Expression Trees at Runtime
 
 C# provides the ability to write lambda expressions such as `n => n / 2`. The
-right hand of such an expression can be processed at runtime. This projects provides tools for such processing.
+right hand of such an expression can be processed at runtime. These projects provides tools for such processing.
 
 ## Features
 
-* Comparing expressions based on their structure
+* Comparison of expressions based on their structure
 * Fast evaluation of expression trees without leaking memory
     * Interpretation
     * Cached Compilation
@@ -18,7 +18,7 @@ right hand of such an expression can be processed at runtime. This projects prov
 
 Some motivating examples to show the library functions:
 
-### Comparing
+### Comparison
 
 ```csharp
 Expression<Func<int, bool>> isEvenExpression = x => x % 2 == 0;
@@ -42,7 +42,7 @@ var isEvenDelegate = CachedExpressionCompiler.Instance.CachedCompileLambda(isEve
 Console.Write(isEvenDelegate(5)); // false
 ```
 
-### Partial Evalution
+### Partial Evaluation
 
 This collapses all subtrees to constants which are independent from the expressions parameters. Will also remove 
 closures and references.
