@@ -16,7 +16,7 @@ right hand of such an expression can be processed at runtime. This project provi
 
 ## NuGet
 
-`ExpressionUtils` is distributed via NuGet, to make it easier to embed into your project. The package name is '[MiaPlaza.ExpressionUtils](https://www.nuget.org/packages/MiaPlaza.ExpressionUtils)'.
+`ExpressionUtils` is distributed via NuGet to make it easier to embed into your project. The package name is '[MiaPlaza.ExpressionUtils](https://www.nuget.org/packages/MiaPlaza.ExpressionUtils)'.
 
 ## Examples
 
@@ -48,7 +48,7 @@ Console.Write(isEvenDelegate(5)); // false
 
 ### Partial Evaluation
 
-This collapses all subtrees to constants which are independent from the expressions parameters. Will also remove 
+This collapses all subtrees to constants that are independent from the expression's parameters. This also removes 
 closures and references.
 
 ```csharp
