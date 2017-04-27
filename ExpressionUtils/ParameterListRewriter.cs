@@ -33,7 +33,7 @@ namespace MiaPlaza.ExpressionUtils {
 		private readonly IReadOnlyDictionary<ParameterExpression, int> indexMap;
 		private readonly ParameterExpression parameter = Expression.Parameter(typeof(IReadOnlyList<object>));
 
-		private static readonly PropertyInfo listIndexer = typeof(IReadOnlyList<object>).GetProperty("Item");
+		private static readonly PropertyInfo listIndexer = typeof(IReadOnlyList<object>).GetTypeInfo().GetDeclaredProperty("Item");
 
 		protected override Expression VisitParameter(ParameterExpression originalNode) {
 			int index;

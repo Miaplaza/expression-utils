@@ -171,19 +171,11 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 						.ToArray();
 					return exp.Indexer.GetValue(obj, indices);
 				} else if (obj is Array) {
-					if (exp.Arguments[0].Type == typeof(long)) { // All array access indices must have same type!
-						var indices = exp.Arguments
-							.Select(a => (long)GetResultFromExpression(a))
-							.ToArray();
+					var indices = exp.Arguments
+						.Select(a => (int)GetResultFromExpression(a))
+						.ToArray();
 
-						return ((Array)obj).GetValue(indices);
-					} else { // .. and it's either long or int.
-						var indices = exp.Arguments
-							.Select(a => (int)GetResultFromExpression(a))
-							.ToArray();
-
-						return ((Array)obj).GetValue(indices);
-					}
+					return ((Array)obj).GetValue(indices);
 				} else {
 					throw new NotSupportedException("Unknown index-access!");
 				}
@@ -298,7 +290,7 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 						case ExpressionType.Convert:
 							return uncheckedConvert(op, exp.Type);
 						case ExpressionType.TypeAs: {
-								if (exp.Type.IsAssignableFrom(exp.Operand.Type)) {
+								if (exp.Type.GetTypeInfo().IsAssignableFrom(exp.Operand.Type.GetTypeInfo())) {
 									return exp.Operand;
 								} else {
 									return null;
@@ -341,7 +333,7 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 
 			private static object uncheckedConvert(dynamic original, Type target) {
 				if (original == null) {
-					if (target.IsValueType && Nullable.GetUnderlyingType(target) == null) {
+					if (target.GetTypeInfo().IsValueType && Nullable.GetUnderlyingType(target) == null) {
 						throw new InvalidCastException($"Cannot assign null to {target.FullName}.");
 					}
 
@@ -368,7 +360,7 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 
 			private static object convert(object original, Type target) {
 				if (original == null) {
-					if (target.IsValueType && Nullable.GetUnderlyingType(target) == null) {
+					if (target.GetTypeInfo().IsValueType && Nullable.GetUnderlyingType(target) == null) {
 						throw new InvalidCastException($"Cannot assign null to {target.FullName}.");
 					}
 
@@ -379,7 +371,7 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 					original = convert(original, Nullable.GetUnderlyingType(target));
 				}
 
-				if (target.IsAssignableFrom(original.GetType())) {
+				if (target.GetTypeInfo().IsAssignableFrom(original.GetType().GetTypeInfo())) {
 					return original;
 				} else {
 					try {

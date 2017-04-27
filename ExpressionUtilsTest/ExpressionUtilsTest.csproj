@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>MiaPlaza.Test.ExpressionUtilsTest</RootNamespace>
     <AssemblyName>ExpressionUtilsTest</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
@@ -42,17 +42,17 @@
     <Compile Include="StructuralIdentity.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ExpressionUtils\ExpressionUtils.csproj">
-      <Project>{5f541203-db86-47d5-8f58-6ab2eb230827}</Project>
-      <Name>ExpressionUtils</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ExpressionUtils\ExpressionUtils.csproj">
+      <Project>{df210241-404c-46e7-a243-40288e17ac62}</Project>
+      <Name>ExpressionUtils</Name>
+    </ProjectReference>
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

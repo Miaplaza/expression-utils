@@ -39,7 +39,7 @@ namespace MiaPlaza.ExpressionUtils {
 			if (exp.IsConstant()) {
 				return !exp.IsConstant(null);
 			}
-			return !exp.Type.IsValueType || Nullable.GetUnderlyingType(exp.Type) != null;
+			return !exp.Type.GetTypeInfo().IsValueType || Nullable.GetUnderlyingType(exp.Type) != null;
 		}
 
 		/// <summary>

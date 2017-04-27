@@ -46,11 +46,6 @@ namespace MiaPlaza.ExpressionUtils {
 				return node;
 			}
 
-			protected sealed override Expression VisitDynamic(DynamicExpression node) {
-				Result = resultVisitor.GetResultFromDynamic(node);
-				return node;
-			}
-
 			protected sealed override ElementInit VisitElementInit(ElementInit node) {
 				Result = resultVisitor.GetResultFromElementInit(node);
 				return node;

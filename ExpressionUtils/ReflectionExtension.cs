@@ -10,28 +10,26 @@ namespace MiaPlaza.ExpressionUtils {
 	/// Collects custom extension-methods to ease things we do with reflection
 	/// </summary>
 	public static class ReflectionExtension {
-		private static readonly BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy;
-
 		/// <summary>
 		/// Determines the implementation of an interface-property in an implementing type.
 		/// </summary>
 		public static PropertyInfo GetImplementationInfo(this PropertyInfo interfaceProperty, Type implementingType) {
-			var interfaceGetter = interfaceProperty.GetGetMethod();
+			var interfaceGetter = interfaceProperty.GetMethod;
 
 			if (interfaceGetter != null) {
 				var getterImpl = GetImplementationInfo(interfaceGetter, implementingType);
 
-				return implementingType.GetProperties(bindingFlags | BindingFlags.GetProperty).FirstOrDefault(p => p.GetGetMethod(true) == getterImpl) 
-					?? GetImplementationInfo(interfaceProperty, implementingType.BaseType);
+				return implementingType.GetTypeInfo().DeclaredProperties.FirstOrDefault(p => p.GetMethod == getterImpl) 
+					?? GetImplementationInfo(interfaceProperty, implementingType.GetTypeInfo().BaseType);
 			}
 			
-			var interfaceSetter = interfaceProperty.GetSetMethod();
+			var interfaceSetter = interfaceProperty.SetMethod;
 
 			if (interfaceSetter != null) {
 				var setterImpl = GetImplementationInfo(interfaceSetter, implementingType);
 
-				return implementingType.GetProperties(bindingFlags | BindingFlags.SetProperty).FirstOrDefault(p => p.GetSetMethod(true) == setterImpl)
-					?? GetImplementationInfo(interfaceProperty, implementingType.BaseType);
+				return implementingType.GetTypeInfo().DeclaredProperties.FirstOrDefault(p => p.SetMethod == setterImpl)
+					?? GetImplementationInfo(interfaceProperty, implementingType.GetTypeInfo().BaseType);
 			}
 
 			throw new InvalidOperationException("Properties must have at least a getter or setter!");
@@ -43,10 +41,10 @@ namespace MiaPlaza.ExpressionUtils {
 		public static MethodInfo GetImplementationInfo(this MethodInfo interfaceMethod, Type implementingType) {
 			var interfaceType = interfaceMethod.DeclaringType;
 
-			if(!interfaceType.IsInterface)
+			if(!interfaceType.GetTypeInfo().IsInterface)
 				throw new InvalidOperationException("Method is no interface-declaration!");
 
-			var interfaceMap = implementingType.GetInterfaceMap(interfaceType);
+			var interfaceMap = implementingType.GetTypeInfo().GetRuntimeInterfaceMap(interfaceType);
 
 			for (int i = 0; i < interfaceMap.InterfaceMethods.Length; i++)
 				if (interfaceMap.InterfaceMethods[i] == interfaceMethod)

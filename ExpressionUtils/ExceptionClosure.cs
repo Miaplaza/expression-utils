@@ -17,7 +17,7 @@ namespace MiaPlaza.ExpressionUtils {
 	/// can therefore resemble any type.
 	/// </summary>
 	public struct ExceptionClosure {
-		private static readonly MethodInfo genericExceptionClosureInvokeMethod = typeof(ExceptionClosure).GetMethod("Invoke");
+		private static readonly MethodInfo genericExceptionClosureInvokeMethod = typeof(ExceptionClosure).GetTypeInfo().GetDeclaredMethod("Invoke");
 
 		public readonly Exception Exception;
 

@@ -46,7 +46,7 @@ namespace MiaPlaza.ExpressionUtils {
 			var dict = new Dictionary<ParameterExpression, Expression>();
 
 			foreach (var tuple in expression.Parameters.Zip(replacements, (p, r) => new { parameter = p, replacement = r })) {
-				if (!tuple.parameter.Type.IsAssignableFrom(tuple.replacement.Type)) {
+				if (!tuple.parameter.Type.GetTypeInfo().IsAssignableFrom(tuple.replacement.Type.GetTypeInfo())) {
 					throw new ArgumentException($"The expression {tuple.replacement} cannot be used as replacement for the parameter {tuple.parameter}.");
 				}
 				dict[tuple.parameter] = tuple.replacement;
@@ -102,7 +102,7 @@ namespace MiaPlaza.ExpressionUtils {
 				// node.Method is non-null if there is a explicit/implicit cast implemented
 				&& node.Method == null) {
 				var operand = this.Visit(node.Operand);
-				if (node.Type.IsAssignableFrom(operand.Type)
+				if (node.Type.GetTypeInfo().IsAssignableFrom(operand.Type.GetTypeInfo())
 					// a cast is lifted if it casts to a Nullable<>
 					&& !node.IsLifted) {
 					return operand;
@@ -114,18 +114,18 @@ namespace MiaPlaza.ExpressionUtils {
 		}
 
 		private static MethodInfo getImplementationToCallOn(Type t, MethodInfo method) {
-			if (method.DeclaringType.IsInterface) {
+			if (method.DeclaringType.GetTypeInfo().IsInterface) {
 				return method.GetImplementationInfo(t);
 			} else {
-				return t.GetMethod(method.Name);
+				return t.GetTypeInfo().GetDeclaredMethod(method.Name);
 			}
 		}
 
 		private static PropertyInfo getImplementationToCallOn(Type t, PropertyInfo property) {
-			if (property.DeclaringType.IsInterface) {
+			if (property.DeclaringType.GetTypeInfo().IsInterface) {
 				return property.GetImplementationInfo(t);
 			} else {
-				return t.GetProperty(property.Name);
+				return t.GetTypeInfo().GetDeclaredProperty(property.Name);
 			}
 		}
 	}
