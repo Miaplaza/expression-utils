@@ -14,6 +14,10 @@ right hand of such an expression can be processed at runtime. This project provi
 * Extraction of constants
 * Substitution of parameters
 
+## NuGet
+
+`ExpressionUtils` is distributed via NuGet, to make it easier to embed into your project. The package name is '[MiaPlaza.ExpressionUtils](https://www.nuget.org/packages/MiaPlaza.ExpressionUtils)'.
+
 ## Examples
 
 Some motivating examples to show the library functions:
