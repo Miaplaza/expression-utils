@@ -9,7 +9,7 @@ namespace MiaPlaza.ExpressionUtils {
 	/// <summary>
 	/// Collects custom extension-methods to ease things we do with reflection
 	/// </summary>
-	public static class ReflectionExtension {
+	internal static class ReflectionExtension {
 		private static readonly BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy;
 
 		/// <summary>
