@@ -2,6 +2,7 @@ using System;
 using NUnit.Framework;
 using MiaPlaza.ExpressionUtils;
 using System.Linq.Expressions;
+using System.Collections.Generic;
 
 namespace MiaPlaza.Test.ExpressionUtilsTest {
 	[TestFixture]
@@ -14,6 +15,11 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 
 			Assert.IsFalse(exp.StructuralIdentical(null));
 			Assert.IsFalse((null as Expression).StructuralIdentical(exp));
+		}
+
+		[Test]
+		public void DifferentNodeType() {
+			Assert.IsFalse(Expression.Constant(12).StructuralIdentical(Expression.Parameter(typeof(int))));
 		}
 
 		[Test]
@@ -63,6 +69,116 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 
 			expA = PartialEvaluator.PartialEvalBody(expA, ExpressionUtils.Evaluating.ExpressionInterpreter.Instance);
 			expB = PartialEvaluator.PartialEvalBody(expB, ExpressionUtils.Evaluating.ExpressionInterpreter.Instance);
+
+			Assert.IsTrue(expA.StructuralIdentical(expB));
+		}
+
+		[Test]
+		public void ConstantIgnoring() {
+			LambdaExpression buildExpression(int c) {
+				Expression<Func<bool>> exp = () => (5 + 17) == c;
+				return exp;
+			}
+
+			var expA = buildExpression(10);
+			var expB = buildExpression(12);
+
+			Assert.IsTrue(expA.StructuralIdentical(expB, ignoreConstantValues: true));
+		}
+
+		[Test]
+		public void Conditionals() {
+			LambdaExpression buildExpression() {
+				Expression<Func<int, bool>> exp = x => x % 2 == 0 ? x == 14 : x == 15;
+				return exp;
+			}
+
+			var expA = buildExpression();
+			var expB = buildExpression();
+
+			Assert.IsTrue(expA.StructuralIdentical(expB));
+		}
+
+		[Test]
+		public void IndexAccesses() {
+			IReadOnlyList<int> array = new int[9];
+
+			LambdaExpression buildExpression() {
+				Expression<Func<int, bool>> exp = x => x < 9 && array[x] > 2;
+				return exp;
+			}
+
+			var expA = buildExpression();
+			var expB = buildExpression();
+
+			Assert.IsTrue(expA.StructuralIdentical(expB));
+		}
+
+		[Test]
+		public void TypeBinary() {
+			LambdaExpression buildExpression() {
+				Expression<Func<object, bool>> exp = x => x is string;
+				return exp;
+			}
+
+			var expA = buildExpression();
+			var expB = buildExpression();
+
+			Assert.IsTrue(expA.StructuralIdentical(expB));
+		}
+
+		[Test]
+		public void Unary() {
+			LambdaExpression buildExpression()
+			{
+				Expression<Func<int, bool>> exp = x => -x > 4;
+				return exp;
+			}
+
+			var expA = buildExpression();
+			var expB = buildExpression();
+
+			Assert.IsTrue(expA.StructuralIdentical(expB));
+		}
+
+		[Test]
+		public void New() {
+			LambdaExpression buildExpression()
+			{
+				Expression<Func<bool>> exp = () => new object() != new object();
+				return exp;
+			}
+
+			var expA = buildExpression();
+			var expB = buildExpression();
+
+			Assert.IsTrue(expA.StructuralIdentical(expB));
+		}
+
+		[Test]
+		public void NewArray() {
+			LambdaExpression buildExpression()
+			{
+				Expression<Func<int[]>> exp = () => new int[0];
+				return exp;
+			}
+
+			var expA = buildExpression();
+			var expB = buildExpression();
+
+			Assert.IsTrue(expA.StructuralIdentical(expB));
+		}
+
+		[Test]
+		public void NewArrayInit() {
+			LambdaExpression buildExpression()
+			{
+				Expression<Func<object>> exp = () => new List<int>() { 2, 3, 5, 7 };
+				return exp;
+			}
+
+			var expA = buildExpression();
+			var expB = buildExpression();
 
 			Assert.IsTrue(expA.StructuralIdentical(expB));
 		}
