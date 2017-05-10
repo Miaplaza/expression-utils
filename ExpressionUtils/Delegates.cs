@@ -60,6 +60,13 @@ namespace MiaPlaza.ExpressionUtils {
 		
 		static readonly ConcurrentDictionary<Type, Func<VariadicArrayParametersDelegate, object>> builders = new ConcurrentDictionary<Type, Func<VariadicArrayParametersDelegate, object>>();
 
+		/// <summary>
+		/// Constructs a delegate of type <typeparamref name="D"/> that calls the given <see cref="VariadicArrayParametersDelegate"/>.
+		/// </summary>
+		/// <remarks>
+		/// Uses <see cref="Expression{TDelegate}.Compile"/> internally, but only once for each type <typeparamref name="D"/>
+		/// provided.
+		/// </remarks>
 		public static D WrapDelegate<D>(this VariadicArrayParametersDelegate delegat) where D : class {
 			Expression<Func<VariadicArrayParametersDelegate, D>> getBuilderExpression() {
 				var invokeMethod = typeof(D).GetMethod("Invoke");
