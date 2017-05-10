@@ -108,6 +108,10 @@ namespace MiaPlaza.ExpressionUtils {
 					return false;
 				}
 
+				if (expression.Type != other.Type) {
+					return false;
+				}
+
 				return base.GetResultFromExpression(expression);
 			}
 
