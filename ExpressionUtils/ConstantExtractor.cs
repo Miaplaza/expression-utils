@@ -18,25 +18,42 @@ namespace MiaPlaza.ExpressionUtils {
 		}
 
 		/// <summary>
+		/// Extracts all constants from an expression (including closures) without rewriting the expression tree.
+		/// </summary>
+		public static IReadOnlyList<object> ExtractConstantsOnly(Expression expression) {
+			var visitor = new ConstantExtractor(rewriteTree: false);
+			visitor.Visit(expression);
+			return visitor.constants;
+		}
+
+		/// <summary>
 		/// Extracts all constants from an expression (including closures) and returns a lambda expression that takes all these constants as parameters.
 		/// </summary>
 		public static ExtractionResult ExtractConstants(Expression expression) {
-			var visitor = new ConstantExtractor();
+			var visitor = new ConstantExtractor(rewriteTree: true);
 			var constantFreeBody = visitor.Visit(expression);
 			return new ExtractionResult(Expression.Lambda(constantFreeBody, visitor.parameters), visitor.constants);
 		}
 
-		private ConstantExtractor() { }
+		private ConstantExtractor(bool rewriteTree) {
+			this.rewriteTree = rewriteTree;
+		}
 
 		readonly List<object> constants = new List<object>();
 		readonly List<ParameterExpression> parameters = new List<ParameterExpression>();
+		readonly bool rewriteTree;
 
 		protected override Expression VisitConstant(ConstantExpression constant) {
-			var parameter = Expression.Parameter(constant.Type, "p" + constants.Count);
 			constants.Add(constant.Value);
-			parameters.Add(parameter);
 
-			return parameter;
+			if (rewriteTree) {
+				var parameter = Expression.Parameter(constant.Type, "p" + constants.Count);
+				parameters.Add(parameter);
+
+				return parameter;
+			} else {
+				return constant;
+			}
 		}
 	}
 }
