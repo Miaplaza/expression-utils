@@ -9,33 +9,14 @@ namespace MiaPlaza.ExpressionUtils {
 	/// Tools to help comparing expressions
 	/// </summary>
 	public static class ExpressionComparing {
-		public sealed class StructuralComparer : IEqualityComparer<Expression> {
-			public readonly int HashCodeExpressionDepth;
-			public readonly bool IgnoreConstantsValues;
-
-			public StructuralComparer(bool ignoreConstantsValues = false, int hashCodeExpressionDepth = 5) {
-				IgnoreConstantsValues = ignoreConstantsValues;
-				HashCodeExpressionDepth = hashCodeExpressionDepth;
-			}
-			
-			int IEqualityComparer<Expression>.GetHashCode(Expression tree) => 
-				GetNodeTypeStructureHashCode(tree, IgnoreConstantsValues, HashCodeExpressionDepth);
-			
-			bool IEqualityComparer<Expression>.Equals(Expression x, Expression y) => x.StructuralIdentical(y, IgnoreConstantsValues);
+		class ExpressionStructureComparisonException : InvalidOperationException {
+			public ExpressionStructureComparisonException(Expression a, Expression b, Exception inner)
+				: base($"Could not compare '{a}' and '{b}'", inner) { }
 		}
-		
+
 		/// <summary>
-		/// Visits the first <paramref name="hashCodeExpressionDepth"/> layers of the expression tree and calculates a hash code based on the <see cref="ExpressionType"/>s there.
+		/// A visitor that computes the hash of an expression, optionally looking only to a certain depth.
 		/// </summary>
-		/// <param name="tree"></param>
-		/// <param name="hashCodeExpressionDepth"></param>
-		/// <returns></returns>
-		public static int GetNodeTypeStructureHashCode(this Expression tree, bool ignoreConstantsValues = false, int? hashCodeExpressionDepth = null) {
-			var visitor = new HashCodeVisitor(ignoreConstantsValues, hashCodeExpressionDepth);
-			visitor.Visit(tree);
-			return visitor.ResultHash;
-		}
-
 		class HashCodeVisitor : ExpressionVisitor {
 			public readonly int? MaxDepth;
 			public readonly bool IgnoreConstants;
@@ -97,168 +78,183 @@ namespace MiaPlaza.ExpressionUtils {
 			}
 		}
 
-		class ExpressionStructureComparisonException : InvalidOperationException {
-			public ExpressionStructureComparisonException(Expression a, Expression b, Exception inner)
-				: base($"Could not compare '{a}' and '{b}'", inner) { }
+		/// <summary>
+		/// A visitor that compares two expressions with each other.
+		/// </summary>
+		class ExpressionComparingVisitor : ExpressionResultVisitor<bool> {
+			public readonly bool IgnoreConstantsValues;
+			Expression other;
+
+			public ExpressionComparingVisitor(Expression other, bool ignoreConstantValues) {
+				this.other = other;
+				IgnoreConstantsValues = ignoreConstantValues;
+			}
+
+			protected bool Compare(Expression a, Expression b) {
+				other = b;
+				return GetResultFromExpression(a);
+			}
+
+			public override bool GetResultFromExpression(Expression expression) {
+				if (expression == other) {
+					return true;
+				}
+
+				if (expression == null || other == null) {
+					return false;
+				}
+
+				if (expression.NodeType != other.NodeType) {
+					return false;
+				}
+
+				if (expression.Type != other.Type) {
+					return false;
+				}
+
+				return base.GetResultFromExpression(expression);
+			}
+
+			protected override bool GetResultFromBinary(BinaryExpression a) {
+				var b = (BinaryExpression)other;
+				return a.IsLifted == b.IsLifted
+					&& a.IsLiftedToNull == b.IsLiftedToNull
+					&& a.Method == b.Method
+					&& Compare(a.Left, b.Left)
+					&& Compare(a.Right, b.Right)
+					&& Compare(a.Conversion, b.Conversion);
+			}
+			protected override bool GetResultFromBlock(BlockExpression a) => throw new NotImplementedException();
+			protected override bool GetResultFromCatchBlock(CatchBlock a) => throw new NotImplementedException();
+			protected override bool GetResultFromConditional(ConditionalExpression a) {
+				var b = (ConditionalExpression)other;
+				return Compare(a.Test, b.Test)
+					&& Compare(a.IfTrue, b.IfTrue)
+					&& Compare(a.IfFalse, b.IfFalse);
+			}
+			protected override bool GetResultFromConstant(ConstantExpression a) {
+				var b = (ConstantExpression)other;
+				return IgnoreConstantsValues || Equals(a.Value, b.Value);
+			}
+			protected override bool GetResultFromDebugInfo(DebugInfoExpression a) => throw new NotImplementedException();
+			protected override bool GetResultFromDefault(DefaultExpression a) => true;
+			protected override bool GetResultFromDynamic(DynamicExpression a) => throw new NotImplementedException();
+			protected override bool GetResultFromElementInit(ElementInit a) => throw new NotImplementedException();
+			protected override bool GetResultFromExtension(Expression a) => throw new NotImplementedException();
+			protected override bool GetResultFromGoto(GotoExpression a) => throw new NotImplementedException();
+			protected override bool GetResultFromIndex(IndexExpression a) {
+				var b = (IndexExpression)other;
+				return a.Indexer == b.Indexer
+					&& Compare(a.Object, b.Object)
+					&& a.Arguments.SequenceEqualOrBothNull(b.Arguments, Compare);
+			}
+			protected override bool GetResultFromInvocation(InvocationExpression a) {
+				var b = (InvocationExpression)other;
+				return a.Expression == b.Expression
+					&& a.Arguments.SequenceEqualOrBothNull(b.Arguments, Compare);
+			}
+			protected override bool GetResultFromLabel(LabelExpression a) => throw new NotImplementedException();
+			protected override bool GetResultFromLabelTarget(LabelTarget a) => throw new NotImplementedException();
+			protected override bool GetResultFromLambda<D>(Expression<D> a) {
+				var b = (Expression<D>)other;
+				return a.ReturnType == b.ReturnType
+					&& a.Parameters.SequenceEqualOrBothNull(b.Parameters, Compare)
+					&& Compare(a.Body, b.Body);
+			}
+			protected override bool GetResultFromListInit(ListInitExpression a) {
+				var b = (ListInitExpression)other;
+				return Compare(a.NewExpression, b.NewExpression)
+					&& a.Initializers.SequenceEqualOrBothNull(b.Initializers, (ia, ib) =>
+						ia.AddMethod == ib.AddMethod
+						&& ia.Arguments.SequenceEqualOrBothNull(ib.Arguments, Compare));
+			}
+			protected override bool GetResultFromLoop(LoopExpression a) => throw new NotImplementedException();
+			protected override bool GetResultFromMember(MemberExpression a) {
+				var b = (MemberExpression)other;
+				return a.Member == b.Member
+					&& Compare(a.Expression, b.Expression);
+			}
+			protected override bool GetResultFromMemberInit(MemberInitExpression a) {
+				var b = (MemberInitExpression)other;
+				return a.Bindings.SequenceEqualOrBothNull(b.Bindings, (ba, bb) =>
+					ba.BindingType == bb.BindingType
+					&& ba.Member == bb.Member)
+					&& a.NewExpression == b.NewExpression;
+			}
+			protected override bool GetResultFromMethodCall(MethodCallExpression a) {
+				var b = (MethodCallExpression)other;
+				return a.Method == b.Method
+					&& Compare(a.Object, b.Object)
+					&& a.Arguments.SequenceEqualOrBothNull(b.Arguments, Compare);
+			}
+			protected override bool GetResultFromNew(NewExpression a) {
+				var b = (NewExpression)other;
+				return a.Constructor == b.Constructor
+					&& a.Members.SequenceEqualOrBothNull(b.Members)
+					&& a.Arguments.SequenceEqualOrBothNull(b.Arguments, Compare);
+			}
+			protected override bool GetResultFromNewArray(NewArrayExpression a) {
+				var b = (NewArrayExpression)other;
+				return a.Expressions.SequenceEqualOrBothNull(b.Expressions, Compare);
+			}
+			protected override bool GetResultFromParameter(ParameterExpression a) {
+				var b = (ParameterExpression)other;
+				return a.IsByRef == b.IsByRef
+					&& a.Name == b.Name;
+			}
+			protected override bool GetResultFromRuntimeVariables(RuntimeVariablesExpression a) => throw new NotImplementedException();
+			protected override bool GetResultFromSwitch(SwitchExpression a) => throw new NotImplementedException();
+			protected override bool GetResultFromSwitchCase(SwitchCase a) => throw new NotImplementedException();
+			protected override bool GetResultFromTry(TryExpression a) => throw new NotImplementedException();
+			protected override bool GetResultFromTypeBinary(TypeBinaryExpression a) {
+				var b = (TypeBinaryExpression)other;
+				return a.TypeOperand == b.TypeOperand
+					&& Compare(a.Expression, b.Expression);
+			}
+			protected override bool GetResultFromUnary(UnaryExpression a) {
+				var b = (UnaryExpression)other;
+				return a.IsLifted == b.IsLifted
+					&& a.IsLiftedToNull == b.IsLiftedToNull
+					&& a.Method == b.Method
+					&& Compare(a.Operand, b.Operand);
+			}
+		}
+
+		public sealed class StructuralComparer : IEqualityComparer<Expression> {
+			public readonly int? HashCodeExpressionDepth;
+			public readonly bool IgnoreConstantsValues;
+
+			public StructuralComparer(bool ignoreConstantsValues = false, int? hashCodeExpressionDepth = 5) {
+				IgnoreConstantsValues = ignoreConstantsValues;
+				HashCodeExpressionDepth = hashCodeExpressionDepth;
+			}
+
+			public int GetHashCode(Expression tree) => GetNodeTypeStructureHashCode(tree, IgnoreConstantsValues, HashCodeExpressionDepth);
+
+			bool IEqualityComparer<Expression>.Equals(Expression x, Expression y) => StructuralIdentical(x, y);
+		}
+
+		/// <summary>
+		/// Visits the first <paramref name="hashCodeExpressionDepth"/> layers of the expression tree and calculates a hash code based on the <see cref="ExpressionType"/>s there.
+		/// </summary>
+		/// <param name="tree"></param>
+		/// <param name="hashCodeExpressionDepth"></param>
+		/// <returns></returns>
+		public static int GetNodeTypeStructureHashCode(this Expression tree, bool ignoreConstantsValues = false, int? hashCodeExpressionDepth = null) {
+			var visitor = new HashCodeVisitor(ignoreConstantsValues, hashCodeExpressionDepth);
+			visitor.Visit(tree);
+			return visitor.ResultHash;
 		}
 
 		/// <summary>
 		/// Compares the structure (kind and order of operations, operands recursively) of expressions. Basically does a recursive member equality check
 		/// </summary>
-		public static bool StructuralIdentical(this Expression a, Expression b, bool ignoreConstantValues = false) {
-			if (ReferenceEquals(a, b)) {
-				return true;
-			}
-
-			if (a == null || b == null) {
-				return false;
-			}
-
+		public static bool StructuralIdentical(this Expression x, Expression y, bool ignoreConstantValues = false) {
 			try {
-				if (a.NodeType != b.NodeType
-					|| a.Type != b.Type) {
-					return false;
-				}
-
-				// The DLR seems not to be able to correctly determine the precise type of lambda expressions
-				// (although it would be good enough to just handle them as LambdaExpressions).
-				// Theferore, we keep them out of dynamic dispatch. See 9047.
-				if (a is LambdaExpression) {
-					return compareNodeDetails(a as LambdaExpression, b as LambdaExpression, ignoreConstantValues);
-				} else {
-					return compareNodeDetails(a as dynamic, b as dynamic, ignoreConstantValues);
-				}
+				return new ExpressionComparingVisitor(y, ignoreConstantValues).GetResultFromExpression(x);
 			} catch (Exception ex) {
-				throw new ExpressionStructureComparisonException(a, b, ex);
+				throw new ExpressionStructureComparisonException(x, y, ex);
 			}
-		}
-
-		private static bool compareNodeDetails(BinaryExpression a, BinaryExpression b, bool ignoreConstantValues) {
-			return a.IsLifted == b.IsLifted
-				&& a.IsLiftedToNull == b.IsLiftedToNull
-				&& a.Method == b.Method
-				&& a.Left.StructuralIdentical(b.Left, ignoreConstantValues)
-				&& a.Right.StructuralIdentical(b.Right, ignoreConstantValues)
-				&& a.Conversion.StructuralIdentical(b.Conversion, ignoreConstantValues);
-		}
-
-		private static bool compareNodeDetails(BlockExpression a, BlockExpression b, bool ignoreConstantValues) {
-			throw new NotSupportedException();
-		}
-
-		private static bool compareNodeDetails(ConditionalExpression a, ConditionalExpression b, bool ignoreConstantValues) {
-			return a.Test.StructuralIdentical(b.Test, ignoreConstantValues)
-				&& a.IfTrue.StructuralIdentical(b.IfTrue, ignoreConstantValues)
-				&& a.IfFalse.StructuralIdentical(b.IfFalse, ignoreConstantValues);
-		}
-
-		private static bool compareNodeDetails(ConstantExpression a, ConstantExpression b, bool ignoreConstantValues) {
-			return object.Equals(a.Value, b.Value);
-		}
-
-		private static bool compareNodeDetails(DebugInfoExpression a, DebugInfoExpression b, bool ignoreConstantValues) {
-			throw new NotSupportedException();
-		}
-
-		private static bool compareNodeDetails(DefaultExpression a, DefaultExpression b, bool ignoreConstantValues) {
-			return true;
-		}
-
-		private static bool compareNodeDetails(DynamicExpression a, DynamicExpression b, bool ignoreConstantValues) {
-			throw new NotSupportedException();
-		}
-
-		private static bool compareNodeDetails(GotoExpression a, GotoExpression b, bool ignoreConstantValues) {
-			throw new NotSupportedException();
-		}
-
-		private static bool compareNodeDetails(IndexExpression a, IndexExpression b, bool ignoreConstantValues) {
-			return a.Indexer == b.Indexer
-				&& a.Object.StructuralIdentical(b.Object, ignoreConstantValues)
-				&& a.Arguments.SequenceEqualOrBothNull(b.Arguments, (x, y) => StructuralIdentical(x, y, ignoreConstantValues));
-		}
-
-		private static bool compareNodeDetails(InvocationExpression a, InvocationExpression b, bool ignoreConstantValues) {
-			return a.Expression == b.Expression
-				&& a.Arguments.SequenceEqualOrBothNull(b.Arguments, (x, y) => StructuralIdentical(x, y, ignoreConstantValues));
-		}
-
-		private static bool compareNodeDetails(LabelExpression a, LabelExpression b, bool ignoreConstantValues) {
-			throw new NotSupportedException();
-		}
-
-		private static bool compareNodeDetails(LambdaExpression a, LambdaExpression b, bool ignoreConstantValues) {
-			return a.ReturnType == b.ReturnType
-				&& a.Parameters.SequenceEqualOrBothNull(b.Parameters, (x, y) => StructuralIdentical(x, y, ignoreConstantValues))
-				&& a.Body.StructuralIdentical(b.Body, ignoreConstantValues);
-		}
-
-		private static bool compareNodeDetails(ListInitExpression a, ListInitExpression b, bool ignoreConstantValues) {
-			return a.NewExpression.StructuralIdentical(b.NewExpression, ignoreConstantValues)
-				&& a.Initializers.SequenceEqualOrBothNull(b.Initializers, (ia, ib) =>
-					ia.AddMethod == ib.AddMethod
-					&& ia.Arguments.SequenceEqualOrBothNull(ib.Arguments, (x, y) => StructuralIdentical(x, y, ignoreConstantValues)));
-		}
-
-		private static bool compareNodeDetails(LoopExpression a, LoopExpression b, bool ignoreConstantValues) {
-			throw new NotSupportedException();
-		}
-
-		private static bool compareNodeDetails(MemberExpression a, MemberExpression b, bool ignoreConstantValues) {
-			return a.Member == b.Member
-				&& a.Expression.StructuralIdentical(b.Expression, ignoreConstantValues);
-		}
-
-		private static bool compareNodeDetails(MemberInitExpression a, MemberInitExpression b, bool ignoreConstantValues) {
-			return a.Bindings.SequenceEqualOrBothNull(b.Bindings, (ba, bb) =>
-				ba.BindingType == bb.BindingType
-				&& ba.Member == bb.Member)
-				&& a.NewExpression == b.NewExpression;
-		}
-
-		private static bool compareNodeDetails(MethodCallExpression a, MethodCallExpression b, bool ignoreConstantValues) {
-			return a.Method == b.Method
-				&& a.Object.StructuralIdentical(b.Object, ignoreConstantValues)
-				&& a.Arguments.SequenceEqualOrBothNull(b.Arguments, (x, y) => StructuralIdentical(x, y, ignoreConstantValues));
-		}
-
-		private static bool compareNodeDetails(NewArrayExpression a, NewArrayExpression b, bool ignoreConstantValues) {
-			return a.Expressions.SequenceEqualOrBothNull(b.Expressions, (x, y) => StructuralIdentical(x, y, ignoreConstantValues));
-		}
-
-		private static bool compareNodeDetails(NewExpression a, NewExpression b, bool ignoreConstantValues) {
-			return a.Constructor == b.Constructor
-				&& a.Members.SequenceEqualOrBothNull(b.Members)
-				&& a.Arguments.SequenceEqualOrBothNull(b.Arguments, (x, y) => StructuralIdentical(x, y, ignoreConstantValues));
-		}
-
-		private static bool compareNodeDetails(ParameterExpression a, ParameterExpression b, bool ignoreConstantValues) {
-			return a.IsByRef == b.IsByRef
-				&& a.Name == b.Name;
-		}
-
-		private static bool compareNodeDetails(RuntimeVariablesExpression a, RuntimeVariablesExpression b, bool ignoreConstantValues) {
-			throw new NotSupportedException();
-		}
-
-		private static bool compareNodeDetails(SwitchExpression a, SwitchExpression b, bool ignoreConstantValues) {
-			throw new NotSupportedException();
-		}
-
-		private static bool compareNodeDetails(TryExpression a, TryExpression b, bool ignoreConstantValues) {
-			throw new NotSupportedException();
-		}
-
-		private static bool compareNodeDetails(TypeBinaryExpression a, TypeBinaryExpression b, bool ignoreConstantValues) {
-			return a.TypeOperand == b.TypeOperand
-				&& a.Expression.StructuralIdentical(b.Expression, ignoreConstantValues);
-		}
-
-		private static bool compareNodeDetails(UnaryExpression a, UnaryExpression b, bool ignoreConstantValues) {
-			return a.IsLifted == b.IsLifted
-				&& a.IsLiftedToNull == b.IsLiftedToNull
-				&& a.Method == b.Method
-				&& a.Operand.StructuralIdentical(b.Operand, ignoreConstantValues);
 		}
 	}
 }
