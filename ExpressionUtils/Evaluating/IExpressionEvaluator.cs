@@ -18,10 +18,20 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 
 		/// <summary>
 		/// Returns a delegate that can be used to get the value of a parametrized expression.
+		/// Works like calling <see cref="Delegate.DynamicInvoke(object[])"/> on <see cref="Expression{TDelegate}.Compile"/>.
 		/// </summary>
 		/// <remarks>
 		/// The "value" of a <see cref="LambdaExpression"/> is a delegate. 
 		/// </remarks>
 		VariadicArrayParametersDelegate EvaluateLambda(LambdaExpression lambdaExpression);
+
+		/// <summary>
+		/// Returns a typed delegate that can be used to get the value of a parametrized expression.
+		/// Works like calling <see cref="Expression{TDelegate}.Compile"/>.
+		/// </summary>
+		/// <remarks>
+		/// The "value" of an <see cref="Expression{TDelegate}"/> is a delegate of that type. 
+		/// </remarks>
+		DELEGATE EvaluateTypedLambda<DELEGATE>(Expression<DELEGATE> expression) where DELEGATE : class;
 	}
 }
