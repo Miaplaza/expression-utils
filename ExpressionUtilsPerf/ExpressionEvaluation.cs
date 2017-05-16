@@ -2,6 +2,7 @@ using BenchmarkDotNet.Attributes;
 using MiaPlaza.ExpressionUtils;
 using MiaPlaza.ExpressionUtils.Evaluating;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -10,60 +11,67 @@ namespace ExpressionUtilsPerf {
 	/// Determines the performance of different approaches to evaluate an expression abstract syntax tree.
 	/// </summary>
 	public class ExpressionEvaluation {
+		static Expression<Func<int, bool>> expression = i => i == 0 || (i < 43 && i > 12 && (i % 3) == 2 && i != 15);
+		
+		Func<int, bool> compiledTypedDelegate;
+		VariadicArrayParametersDelegate compiledDelegate;
 
-		static readonly Expression<Func<int, bool>>[] expressions = {
-			// Tiny expression without branching
-			i => i > 5,
-			// Big expression with short-circuits
-			i => i == 0 || (i < 43 && i > 12 && (i % 3) == 2 && i != 15)
-		};
+		Func<int, bool> cachedTypedCompiledDelegate;
+		VariadicArrayParametersDelegate cachedCompiledDelegate;
 
-		static readonly Func<int, bool>[] compiledDelegates = expressions
-			.Select(e => e.Compile())
-			.ToArray();
+		Func<int, bool> interpretationTypedDelegate;
+		VariadicArrayParametersDelegate interpretationDelegate;
 
-		static readonly VariadicArrayParametersDelegate[] cachedCompiledDelegates = expressions
-			.Select(CachedExpressionCompiler.Instance.CachedCompileLambda)
-			.ToArray();
+		[Setup]
+		public void Init() {
+			compiledTypedDelegate = TypedCompilation();
+			compiledDelegate = UntypedCompilation();
+			
+			cachedTypedCompiledDelegate = CachedTypedCompilation();
+			cachedCompiledDelegate = UntypedCachedCompilation();
 
-		static readonly VariadicArrayParametersDelegate[] interpretationDelegates = expressions
-			.Select(ExpressionInterpreter.Instance.InterpretLambda)
-			.ToArray();
-
-		[Params(0, 1)]
-		public int ExpressionIndex { get; set; }
-
-		[Params(0, 14)]
-		public int Value { get; set; }
-
-		[Benchmark]
-		public Delegate Compilation() {
-			return expressions[ExpressionIndex].Compile();
+			interpretationTypedDelegate = TypedInterpretation();
+			interpretationDelegate = UntypedInterpretation();
 		}
 
-		[Benchmark]
-		public bool CompiledExecution() {
-			return compiledDelegates[ExpressionIndex](Value);
-		}
+		public int Value => 14;
 
 		[Benchmark]
-		public Delegate CachedCompilation() {
-			return CachedExpressionCompiler.Instance.CachedCompileLambda(expressions[ExpressionIndex]);
-		}
+		public Func<int, bool> TypedCompilation() => ExpressionCompiler.Instance.EvaluateTypedLambda(expression);
+		
+		[Benchmark]
+		public bool TypedCompiledExecution() => compiledTypedDelegate(Value);
 
 		[Benchmark]
-		public object CachedCompiledExecution() {
-			return cachedCompiledDelegates[ExpressionIndex](Value);
-		}
+		public VariadicArrayParametersDelegate UntypedCompilation() => ExpressionCompiler.Instance.EvaluateLambda(expression);
 
 		[Benchmark]
-		public Delegate Interpretation() {
-			return ExpressionInterpreter.Instance.InterpretLambda(expressions[ExpressionIndex]);
-		}
+		public object UntypedCompiledExecution() => compiledDelegate(Value);
+		
+
+		[Benchmark]
+		public Func<int, bool> CachedTypedCompilation() => CachedExpressionCompiler.Instance.CachedCompileTypedLambda(expression);
+
+		[Benchmark]
+		public bool CachedTypedCompiledExecution() => cachedTypedCompiledDelegate(Value);
+
+		[Benchmark]
+		public VariadicArrayParametersDelegate UntypedCachedCompilation() => CachedExpressionCompiler.Instance.CachedCompileLambda(expression);
+
+		[Benchmark]
+		public object UntypedCachedCompiledExecution() => cachedCompiledDelegate(Value);
+		
+
+		[Benchmark]
+		public Func<int, bool> TypedInterpretation() => ExpressionInterpreter.Instance.InterpretTypedLambda(expression);
+
+		[Benchmark]
+		public bool TypedInterpretationExecution() => interpretationTypedDelegate(Value);
+
+		[Benchmark]
+		public VariadicArrayParametersDelegate UntypedInterpretation() => ExpressionInterpreter.Instance.InterpretLambda(expression);
 
 		[Benchmark(Baseline = true)]
-		public object InterpretationExecution() {
-			return interpretationDelegates[ExpressionIndex](Value);
-		}
+		public object UntypedInterpretationExecution() => interpretationDelegate(Value);
 	}
 }
