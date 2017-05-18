@@ -96,9 +96,15 @@ namespace MiaPlaza.ExpressionUtils {
 			}
 
 			public override bool GetResultFromExpression(Expression expression) {
-				if (expression == other) {
+#if DEBUG
+				if (expression == null && other == null) {
 					return true;
 				}
+#else
+				if (ReferenceEquals(expression, other)) {
+					return true;
+				}
+#endif
 
 				if (expression == null || other == null) {
 					return false;

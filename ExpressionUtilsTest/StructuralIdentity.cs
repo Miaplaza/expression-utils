@@ -182,5 +182,15 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 
 			Assert.IsTrue(expA.StructuralIdentical(expB));
 		}
+
+		[Test]
+		public void ComplexLambda() {
+			Expression<Func<int, bool>> buildExpression() => i => i == 0 || (i < 43 && i > 12 && (i % 3) == 2 && i != 15);
+
+			var expA = buildExpression();
+			var expB = buildExpression();
+
+			Assert.IsTrue(expA.StructuralIdentical(expB));
+		}
 	}
 }

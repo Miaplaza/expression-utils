@@ -2,15 +2,13 @@
 <package >
   <metadata>
     <id>MiaPlaza.ExpressionUtils</id>
-    <version>1.0.0</version>
-    <authors>MiaPlaza</authors>
-    <owners>MiaPlaza</owners>
+    <version>1.1.0</version>
+    <authors>Khazuar</authors>
     <licenseUrl>https://raw.githubusercontent.com/Miaplaza/expression-utils/master/LICENSE</licenseUrl>
     <projectUrl>https://github.com/Miaplaza/expression-utils</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Efficient Processing, Compilation, and Execution of Expression Trees at Runtime</description>
-    <releaseNotes>Initial release for nuget.</releaseNotes>
-    <copyright>Copyright 2017</copyright>
+    <releaseNotes>Added typed evaluation and some performance improvements for structure comparison and cached compilation.</releaseNotes>
     <tags>Expression Expressions Linq.Expressions Evaluation Compile Compiler Execute Execution Compare Comparison</tags>
   </metadata>
 </package>
