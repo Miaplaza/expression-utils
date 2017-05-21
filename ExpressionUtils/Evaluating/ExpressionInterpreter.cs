@@ -293,6 +293,8 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 							return ~op;
 						case ExpressionType.UnaryPlus:
 							return +op;
+						case ExpressionType.Quote:
+							return exp.Operand;
 						case ExpressionType.ConvertChecked:
 							return convert(op, exp.Type);
 						case ExpressionType.Convert:
