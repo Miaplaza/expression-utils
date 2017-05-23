@@ -32,7 +32,7 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 			}
 		}
 		
-		DELEGATE IExpressionEvaluator.EvaluateTypedLambda<DELEGATE>(Expression<DELEGATE> expression) => throw new NotImplementedException();
+		DELEGATE IExpressionEvaluator.EvaluateTypedLambda<DELEGATE>(Expression<DELEGATE> expression) => InterpretTypedLambda(expression);
 		public DELEGATE InterpretTypedLambda<DELEGATE>(Expression<DELEGATE> expression) where DELEGATE : class => InterpretLambda(expression).WrapDelegate<DELEGATE>();
 
 		VariadicArrayParametersDelegate IExpressionEvaluator.EvaluateLambda(LambdaExpression lambdaExpression) => InterpretLambda(lambdaExpression);
