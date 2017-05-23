@@ -26,19 +26,29 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 
 		VariadicArrayParametersDelegate IExpressionEvaluator.EvaluateLambda(LambdaExpression lambdaExpression) => CachedCompileLambda(lambdaExpression);
 		public VariadicArrayParametersDelegate CachedCompileLambda(LambdaExpression lambda) {
-			var extractionResult = ConstantExtractor.ExtractConstants(lambda.Body);
+			IReadOnlyList<object> constants;
 
-			var compiled = delegates.GetOrAdd(lambda, _ => ParameterListRewriter.RewriteLambda(
-				Expression.Lambda(
-					extractionResult.ConstantfreeExpression.Body, 
-					extractionResult.ConstantfreeExpression.Parameters.Concat(lambda.Parameters)))
-					.Compile()
-			);
+			if (delegates.TryGetValue(lambda, out var compiled)) {
+				constants = ConstantExtractor.ExtractConstantsOnly(lambda.Body);
+			} else {
+				var extractionResult = ConstantExtractor.ExtractConstants(lambda.Body);
 
-			return args => compiled(extractionResult.ExtractedConstants.Concat(args).ToArray());
+				compiled = ParameterListRewriter.RewriteLambda(
+					Expression.Lambda(
+						extractionResult.ConstantfreeExpression.Body,
+						extractionResult.ConstantfreeExpression.Parameters.Concat(lambda.Parameters)))
+					.Compile();
+				delegates.TryAdd(lambda, compiled);
+				constants = extractionResult.ExtractedConstants;
+			}
+
+			return args => compiled(constants.Concat(args).ToArray());
 		}
 
 		object IExpressionEvaluator.Evaluate(Expression unparametrizedExpression) => CachedCompile(unparametrizedExpression);
 		public object CachedCompile(Expression unparametrizedExpression) => CachedCompileLambda(Expression.Lambda(unparametrizedExpression))();
+
+		DELEGATE IExpressionEvaluator.EvaluateTypedLambda<DELEGATE>(Expression<DELEGATE> expression) => throw new NotImplementedException();
+		public DELEGATE CachedCompileTypedLambda<DELEGATE>(Expression<DELEGATE> expression) where DELEGATE : class => CachedCompileLambda(expression).WrapDelegate<DELEGATE>();
 	}
 }
