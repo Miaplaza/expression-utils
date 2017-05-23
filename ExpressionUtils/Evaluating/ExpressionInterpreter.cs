@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -297,7 +298,7 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 						case ExpressionType.UnaryPlus:
 							return +op;
 						case ExpressionType.Quote:
-							return exp.Operand;
+							return unquote((LambdaExpression)op);
 						case ExpressionType.ConvertChecked:
 							return convert(op, exp.Type);
 						case ExpressionType.Convert:
@@ -312,6 +313,16 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 						default:
 							throw new NotImplementedException(exp.NodeType.ToString());
 					}
+				}
+			}
+
+			LambdaExpression unquote(LambdaExpression quotedLambda) {
+				if (parameters.Count == 0) {
+					return quotedLambda;
+				} else {
+					return (LambdaExpression)ParameterSubstituter.SubstituteParameter(
+						quotedLambda, 
+						parameters.ToDictionary(kvp => kvp.Key, kvp => (Expression)Expression.Constant(kvp.Value)));
 				}
 			}
 			
