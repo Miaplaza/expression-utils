@@ -12,13 +12,25 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 	/// <summary>
 	/// Performance benchmarks for expression interpretation.
 	/// </summary>
-	[TestFixture]
-	class ExpressionInterpretation {
+	[TestFixtureSource(nameof(Evaluators))]
+	class ExpressionEvaluation {
+		public static IEnumerable<TestFixtureData> Evaluators = new[] {
+			new TestFixtureData(ExpressionCompiler.Instance),
+			new TestFixtureData(CachedExpressionCompiler.Instance),
+			new TestFixtureData(ExpressionInterpreter.Instance),
+		};
+
+		private readonly IExpressionEvaluator evaluator;
+
+		public ExpressionEvaluation(IExpressionEvaluator evaluator) {
+			this.evaluator = evaluator;
+		}
+
 		[Test]
 		public void TestConstantExpression() {
 			Expression<Func<bool>> expr = () => true;
 
-			Assert.AreEqual(expected: true, actual: ExpressionInterpreter.Instance.Interpret(expr.Body));
+			Assert.AreEqual(expected: true, actual: evaluator.Evaluate(expr.Body));
 		}
 
 		[Test]
@@ -26,7 +38,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			int variable = 42;
 			Expression<Func<int>> expr = () => variable;
 
-			Assert.AreEqual(expected: 42, actual: ExpressionInterpreter.Instance.Interpret(expr.Body));
+			Assert.AreEqual(expected: 42, actual: evaluator.Evaluate(expr.Body));
 		}
 
 		[Test]
@@ -34,7 +46,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			int variable = 42;
 			Expression<Func<int>> expr = () => variable + 1000;
 
-			Assert.AreEqual(expected: 1042, actual: ExpressionInterpreter.Instance.Interpret(expr.Body));
+			Assert.AreEqual(expected: 1042, actual: evaluator.Evaluate(expr.Body));
 		}
 
 		bool throwsException() {
@@ -46,11 +58,11 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			int variable = 42;
 			Expression<Func<bool>> expr = () => variable > 1 || throwsException();
 
-			Assert.AreEqual(expected: true, actual: ExpressionInterpreter.Instance.Interpret(expr.Body));
+			Assert.AreEqual(expected: true, actual: evaluator.Evaluate(expr.Body));
 
 			expr = () => variable < 1 && throwsException();
 
-			Assert.AreEqual(expected: false, actual: ExpressionInterpreter.Instance.Interpret(expr.Body));
+			Assert.AreEqual(expected: false, actual: evaluator.Evaluate(expr.Body));
 		}
 
 		enum MyEnum {
@@ -64,7 +76,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			var value = MyEnum.Second;
 			Expression<Func<int>> expression = () => (int)value;
 
-			Assert.AreEqual(expected: 1, actual: ExpressionInterpreter.Instance.Interpret(expression.Body));
+			Assert.AreEqual(expected: 1, actual: evaluator.Evaluate(expression.Body));
 		}
 
 		[Test]
@@ -72,7 +84,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			var value = MyEnum.Second;
 			Expression<Func<int?>> expression = () => (int?)value;
 			
-			Assert.AreEqual(expected: 1, actual: ExpressionInterpreter.Instance.Interpret(expression.Body));
+			Assert.AreEqual(expected: 1, actual: evaluator.Evaluate(expression.Body));
 		}
 
 		[Test]
@@ -80,10 +92,10 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			MyEnum? value = MyEnum.Second;
 			Expression<Func<int?>> expression = () => (int?)value;
 
-			Assert.AreEqual(expected: 1, actual: ExpressionInterpreter.Instance.Interpret(expression.Body));
+			Assert.AreEqual(expected: 1, actual: evaluator.Evaluate(expression.Body));
 
 			value = null;
-			Assert.AreEqual(expected: null, actual: ExpressionInterpreter.Instance.Interpret(expression.Body));
+			Assert.AreEqual(expected: null, actual: evaluator.Evaluate(expression.Body));
 		}
 
 		[Test]
@@ -91,10 +103,13 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			MyEnum? value = MyEnum.Second;
 			Expression<Func<int?>> expression = () => (int)value;
 
-			Assert.AreEqual(expected: 1, actual: ExpressionInterpreter.Instance.Interpret(expression.Body));
+			Assert.AreEqual(expected: 1, actual: evaluator.Evaluate(expression.Body));
 
 			value = null;
-			Assert.That(() => ExpressionInterpreter.Instance.Interpret(expression.Body), Throws.InnerException.TypeOf<InvalidCastException>());
+			try {
+				evaluator.Evaluate(expression.Body);
+				Assert.Fail();
+			} catch { }
 		}
 
 		public static readonly IEnumerable<int> TestOffsets = new[] {
@@ -117,24 +132,31 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 					expectedUnder = (byte)(byte.MinValue - offset);
 				}
 
-				Assert.AreEqual(expected: byte.MaxValue, actual: ExpressionInterpreter.Instance.InterpretLambda(expression)(byte.MaxValue));
-				Assert.AreEqual(expected: expectedOver, actual: ExpressionInterpreter.Instance.InterpretLambda(expression)(byte.MaxValue + offset));
-				Assert.AreEqual(expected: expectedUnder, actual: ExpressionInterpreter.Instance.InterpretLambda(expression)(byte.MinValue - offset));
+				Assert.AreEqual(expected: byte.MaxValue, actual: evaluator.EvaluateTypedLambda(expression)(byte.MaxValue));
+				Assert.AreEqual(expected: expectedOver, actual: evaluator.EvaluateTypedLambda(expression)(byte.MaxValue + offset));
+				Assert.AreEqual(expected: expectedUnder, actual: evaluator.EvaluateTypedLambda(expression)(byte.MinValue - offset));
 
 				checked {
 					expression = v => (byte)v;
 				}
 
-				Assert.AreEqual(expected: byte.MaxValue, actual: ExpressionInterpreter.Instance.InterpretLambda(expression)(byte.MaxValue));
+				Assert.AreEqual(expected: byte.MaxValue, actual: evaluator.EvaluateTypedLambda(expression)(byte.MaxValue));
 				try {
-					ExpressionInterpreter.Instance.InterpretLambda(expression)(byte.MaxValue + offset);
-				} catch (Exception ex) {
-					Assert.IsInstanceOf<OverflowException>(ex.InnerException);
+					evaluator.EvaluateTypedLambda(expression)(byte.MaxValue + offset);
+					Assert.Fail();
+				} catch (Exception ex) when (ex.InnerException is OverflowException) {
+				} catch (OverflowException) {
+				} catch {
+					Assert.Fail();
 				}
+
 				try {
-					ExpressionInterpreter.Instance.InterpretLambda(expression)(byte.MinValue - offset);
-				} catch (Exception ex) {
-					Assert.IsInstanceOf<OverflowException>(ex.InnerException);
+					evaluator.EvaluateTypedLambda(expression)(byte.MinValue - offset);
+					Assert.Fail();
+				} catch (Exception ex) when (ex.InnerException is OverflowException) {
+				} catch (OverflowException) {
+				} catch {
+					Assert.Fail();
 				}
 			}
 		}
@@ -143,7 +165,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 		public void TestNewArrayExpression() {
 			Expression<Func<int[]>> expression = () => new[] { 2, 3, 5, 7 };
 
-			var res = ExpressionInterpreter.Instance.Interpret(expression.Body);
+			var res = evaluator.Evaluate(expression.Body);
 
 			Assert.That(res, Is.InstanceOf<int[]>());
 			Assert.That(((int[])res)[0], Is.EqualTo(2));
@@ -154,14 +176,12 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 
 		[Test]
 		public void TestQuoteExpression() {
-			IExpressionEvaluator interpreter = ExpressionInterpreter.Instance; //ExpressionInterpreter.Instance;
-
 			Expression<Func<int, Expression<Func<int, int>>>> adderExpressionBuilderExpression = x => y => x + y;
-			Func<int, Expression<Func<int, int>>> adderBuilder = interpreter.EvaluateTypedLambda(adderExpressionBuilderExpression);
+			Func<int, Expression<Func<int, int>>> adderBuilder = evaluator.EvaluateTypedLambda(adderExpressionBuilderExpression);
 
 			Expression<Func<int, int>> adderWithFiveExpression = adderBuilder(5);
 
-			Func<int, int> adderWithFive = interpreter.EvaluateTypedLambda(adderWithFiveExpression);
+			Func<int, int> adderWithFive = evaluator.EvaluateTypedLambda(adderWithFiveExpression);
 
 			Assert.AreEqual(expected: 7, actual: adderWithFive(2));
 		}
@@ -173,7 +193,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 		public void TestLambdaExpression() {
 			Expression<Func<int, bool>> expression = i => i < 43 && i > 12 && (i % 3) == 2 && i != 15 || i == 0;
 
-			ExpressionInterpreter.Instance.InterpretLambda(expression)(14);
+			evaluator.EvaluateLambda(expression)(14);
 		}
 	}
 }

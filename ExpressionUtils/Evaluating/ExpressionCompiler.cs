@@ -19,7 +19,7 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 		ExpressionCompiler() { }
 
 		public object Evaluate(Expression unparametrizedExpression)
-			=> EvaluateTypedLambda(Expression.Lambda<Func<object>>(unparametrizedExpression))();
+			=> EvaluateLambda(Expression.Lambda(unparametrizedExpression))();
 		public VariadicArrayParametersDelegate EvaluateLambda(LambdaExpression lambdaExpression)
 			=> lambdaExpression.Compile().DynamicInvoke;
 		public D EvaluateTypedLambda<D>(Expression<D> lambdaExpression) where D : class
