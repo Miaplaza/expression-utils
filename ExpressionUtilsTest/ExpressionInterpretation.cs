@@ -152,6 +152,20 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			Assert.That(((int[])res)[3], Is.EqualTo(7));
 		}
 
+		[Test]
+		public void TestQuoteExpression() {
+			IExpressionEvaluator interpreter = ExpressionInterpreter.Instance; //ExpressionInterpreter.Instance;
+
+			Expression<Func<int, Expression<Func<int, int>>>> adderExpressionBuilderExpression = x => y => x + y;
+			Func<int, Expression<Func<int, int>>> adderBuilder = interpreter.EvaluateTypedLambda(adderExpressionBuilderExpression);
+
+			Expression<Func<int, int>> adderWithFiveExpression = adderBuilder(5);
+
+			Func<int, int> adderWithFive = interpreter.EvaluateTypedLambda(adderWithFiveExpression);
+
+			Assert.AreEqual(expected: 7, actual: adderWithFive(2));
+		}
+
 		/// <summary>
 		/// Tests whether the interpreter correctly wraps the interpretation in a delegate.
 		/// </summary>
