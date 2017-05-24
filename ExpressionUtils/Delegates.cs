@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -54,6 +57,38 @@ namespace MiaPlaza.ExpressionUtils {
 
 				throw new AggregateException("No options left!", exceptions);
 			};
+		}
+		
+		static readonly ConcurrentDictionary<Type, Func<VariadicArrayParametersDelegate, object>> builders = new ConcurrentDictionary<Type, Func<VariadicArrayParametersDelegate, object>>();
+
+		/// <summary>
+		/// Constructs a delegate of type <typeparamref name="D"/> that calls the given <see cref="VariadicArrayParametersDelegate"/>.
+		/// </summary>
+		/// <remarks>
+		/// Uses <see cref="Expression{TDelegate}.Compile"/> internally, but only once for each type <typeparamref name="D"/>
+		/// provided.
+		/// </remarks>
+		public static D WrapDelegate<D>(this VariadicArrayParametersDelegate delegat) where D : class {
+			Expression<Func<VariadicArrayParametersDelegate, D>> getBuilderExpression() {
+				var invokeMethod = typeof(D).GetTypeInfo().GetDeclaredMethod("Invoke");
+
+				var delegatExpression = Expression.Parameter(typeof(VariadicArrayParametersDelegate), "del");
+				var argumentExpressions = invokeMethod.GetParameters()
+					.Select((pi, i) => Expression.Parameter(pi.ParameterType, $"p{i}"))
+					.ToArray();
+
+				var arrayExpression = Expression.NewArrayInit(
+					typeof(object), 
+					initializers: argumentExpressions
+						.Select(a => Expression.Convert(a, typeof(object))));
+				var body = Expression.Convert(Expression.Invoke(delegatExpression, arrayExpression), invokeMethod.ReturnType);
+
+				return Expression.Lambda<Func<VariadicArrayParametersDelegate, D>>(Expression.Lambda<D>(body, argumentExpressions), delegatExpression);
+			}
+
+			var builder = builders.GetOrAdd(typeof(D), (Type t) => getBuilderExpression().Compile());
+
+			return (D)builder(delegat);
 		}
 	}
 }

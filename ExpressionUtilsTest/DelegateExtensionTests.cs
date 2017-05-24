@@ -57,5 +57,16 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			Assert.AreEqual(expected: 2, actual: callsToFirst);
 			Assert.AreEqual(expected: 3, actual: callsToSecond);
 		}
+
+		[Test]
+		public void DelegateWrappingTest() {
+			VariadicArrayParametersDelegate del = args => (int)args[0] + (int)args[1];
+
+			Func<int, int, int> wrapped = del.WrapDelegate<Func<int, int, int>>();
+
+			int result = wrapped(30, 12);
+
+			Assert.AreEqual(expected: 42, actual: result);
+		}
 	}
 }

@@ -14,8 +14,12 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 	/// since the compiled delegates are not garbage-collected and cannot be freed manually either. 
 	/// </remarks>
 	internal class ExpressionCompiler : IExpressionEvaluator {
+		public static readonly IExpressionEvaluator Instance = new ExpressionCompiler();
+
+		ExpressionCompiler() { }
+
 		public object Evaluate(Expression unparametrizedExpression)
-			=> EvaluateTypedLambda(Expression.Lambda<Func<object>>(unparametrizedExpression))();
+			=> EvaluateLambda(Expression.Lambda(unparametrizedExpression))();
 		public VariadicArrayParametersDelegate EvaluateLambda(LambdaExpression lambdaExpression)
 			=> lambdaExpression.Compile().DynamicInvoke;
 		public D EvaluateTypedLambda<D>(Expression<D> lambdaExpression) where D : class

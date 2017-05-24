@@ -16,6 +16,7 @@ namespace MiaPlaza.ExpressionUtils.Expanding {
 			public object Evaluate(Expression unparametrizedExpression) => throw new NotImplementedException();
 			public VariadicArrayParametersDelegate EvaluateLambda(LambdaExpression lambdaExpression) 
 				=> throw new InvalidOperationException("No evaluator set for handling 'Eval' calls!");
+			public DELEGATE EvaluateTypedLambda<DELEGATE>(Expression<DELEGATE> expression) where DELEGATE : class => throw new NotImplementedException();
 		}
 
 		/// <summary>

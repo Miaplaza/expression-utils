@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -31,6 +32,9 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 				throw new DynamicEvaluationException(exp, e);
 			}
 		}
+		
+		DELEGATE IExpressionEvaluator.EvaluateTypedLambda<DELEGATE>(Expression<DELEGATE> expression) => InterpretTypedLambda(expression);
+		public DELEGATE InterpretTypedLambda<DELEGATE>(Expression<DELEGATE> expression) where DELEGATE : class => InterpretLambda(expression).WrapDelegate<DELEGATE>();
 
 		VariadicArrayParametersDelegate IExpressionEvaluator.EvaluateLambda(LambdaExpression lambdaExpression) => InterpretLambda(lambdaExpression);
 		public VariadicArrayParametersDelegate InterpretLambda(LambdaExpression lambda) => args => {
@@ -285,6 +289,8 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 							return ~op;
 						case ExpressionType.UnaryPlus:
 							return +op;
+						case ExpressionType.Quote:
+							return unquote((LambdaExpression)op);
 						case ExpressionType.ConvertChecked:
 							return convert(op, exp.Type);
 						case ExpressionType.Convert:
@@ -299,6 +305,16 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 						default:
 							throw new NotImplementedException(exp.NodeType.ToString());
 					}
+				}
+			}
+
+			LambdaExpression unquote(LambdaExpression quotedLambda) {
+				if (parameters.Count == 0) {
+					return quotedLambda;
+				} else {
+					return (LambdaExpression)ParameterSubstituter.SubstituteParameter(
+						quotedLambda, 
+						parameters.ToDictionary(kvp => kvp.Key, kvp => (Expression)Expression.Constant(kvp.Value)));
 				}
 			}
 			
