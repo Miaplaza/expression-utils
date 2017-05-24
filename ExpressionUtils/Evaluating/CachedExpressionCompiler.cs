@@ -28,7 +28,8 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 		public VariadicArrayParametersDelegate CachedCompileLambda(LambdaExpression lambda) {
 			IReadOnlyList<object> constants;
 
-			if (delegates.TryGetValue(lambda, out var compiled)) {
+			ParameterListDelegate compiled;
+			if (delegates.TryGetValue(lambda, out compiled)) {
 				constants = ConstantExtractor.ExtractConstantsOnly(lambda.Body);
 			} else {
 				var extractionResult = ConstantExtractor.ExtractConstants(lambda.Body);
