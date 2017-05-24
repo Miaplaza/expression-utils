@@ -22,13 +22,11 @@ namespace MiaPlaza.ExpressionUtils {
 	/// possible (<see cref="VisitUnary"/>.)
 	/// </remarks>
 	public class ParameterSubstituter : ExpressionVisitor {
-		public static Expression SubstituteParameter(LambdaExpression expression, params Expression[] replacements) {
-			return SubstituteParameter(expression, replacements == null ? null : new ReadOnlyCollection<Expression>(replacements));
-		}
+		public static Expression SubstituteParameter(LambdaExpression expression, params Expression[] replacements)
+			=> SubstituteParameter(expression, replacements as IReadOnlyCollection<Expression>);
 
-		public static Expression SubstituteParameter(LambdaExpression expression, IEnumerable<Expression> replacements) {
-			return SubstituteParameter(expression, replacements.ToList());
-		}
+		public static Expression SubstituteParameter(LambdaExpression expression, IEnumerable<Expression> replacements)
+			=> SubstituteParameter(expression, replacements.ToList());
 
 		public static Expression SubstituteParameter(LambdaExpression expression, IReadOnlyCollection<Expression> replacements) {
 			if (expression == null) {
@@ -55,6 +53,9 @@ namespace MiaPlaza.ExpressionUtils {
 			return new ParameterSubstituter(dict).Visit(expression.Body);
 		}
 
+		public static Expression SubstituteParameter(Expression expression, IReadOnlyDictionary<ParameterExpression, Expression> replacements)
+			=> new ParameterSubstituter(replacements).Visit(expression);
+
 		readonly IReadOnlyDictionary<ParameterExpression, Expression> replacements;
 
 		ParameterSubstituter(IReadOnlyDictionary<ParameterExpression, Expression> replacements) {
@@ -62,7 +63,12 @@ namespace MiaPlaza.ExpressionUtils {
 		}
 
 		protected override Expression VisitParameter(ParameterExpression node) {
-			return replacements.ContainsKey(node) ? replacements[node] : node;
+			Expression replacement;
+			if (replacements.TryGetValue(node, out replacement)) {
+				return replacement;
+			} else {
+				return node;
+			}
 		}
 
 		protected override Expression VisitMember(MemberExpression node) {

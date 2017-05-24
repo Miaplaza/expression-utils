@@ -37,7 +37,7 @@
     <Compile Include="DelegateExtensionTests.cs" />
     <Compile Include="ExpressionExpansion.cs" />
     <Compile Include="ParameterSubstituter.cs" />
-    <Compile Include="ExpressionInterpretation.cs" />
+    <Compile Include="ExpressionEvaluation.cs" />
     <Compile Include="PartialEvaluation.cs" />
     <Compile Include="StructuralIdentity.cs" />
   </ItemGroup>
