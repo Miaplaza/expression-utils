@@ -10,11 +10,12 @@ using MiaPlaza.ExpressionUtils.Evaluating;
 
 namespace MiaPlaza.Test.ExpressionUtilsTest {
 	/// <summary>
-	/// Performance benchmarks for expression interpretation.
+	/// Tests of correctness for different ways of expression evaluation
 	/// </summary>
 	[TestFixtureSource(nameof(Evaluators))]
 	class ExpressionEvaluation {
 		public static IEnumerable<TestFixtureData> Evaluators = new[] {
+			// in here for reference
 			new TestFixtureData(ExpressionCompiler.Instance),
 			new TestFixtureData(CachedExpressionCompiler.Instance),
 			new TestFixtureData(ExpressionInterpreter.Instance),
@@ -185,10 +186,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 
 			Assert.AreEqual(expected: 7, actual: adderWithFive(2));
 		}
-
-		/// <summary>
-		/// Tests whether the interpreter correctly wraps the interpretation in a delegate.
-		/// </summary>
+		
 		[Test]
 		public void TestLambdaExpression() {
 			Expression<Func<int, bool>> expression = i => i < 43 && i > 12 && (i % 3) == 2 && i != 15 || i == 0;

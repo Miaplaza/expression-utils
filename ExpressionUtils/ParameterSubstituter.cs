@@ -62,8 +62,14 @@ namespace MiaPlaza.ExpressionUtils {
 			this.replacements = replacements;
 		}
 
-		protected override Expression VisitParameter(ParameterExpression node) 
-			=> replacements.TryGetValue(node, out var replacement) ? replacement : node;
+		protected override Expression VisitParameter(ParameterExpression node) {
+			Expression replacement;
+			if (replacements.TryGetValue(node, out replacement)) {
+				return replacement;
+			} else {
+				return node;
+			}
+		}
 
 		protected override Expression VisitMember(MemberExpression node) {
 			var baseCallResult = (MemberExpression)base.VisitMember(node);
