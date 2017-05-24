@@ -75,10 +75,10 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 
 		[Test]
 		public void ConstantIgnoring() {
-			LambdaExpression buildExpression(int c) {
+			Func<int, LambdaExpression> buildExpression = c => {
 				Expression<Func<bool>> exp = () => (5 + 17) == c;
 				return exp;
-			}
+			};
 
 			var expA = buildExpression(10);
 			var expB = buildExpression(12);
@@ -88,10 +88,10 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 
 		[Test]
 		public void Conditionals() {
-			LambdaExpression buildExpression() {
+			Func<LambdaExpression> buildExpression = () => {
 				Expression<Func<int, bool>> exp = x => x % 2 == 0 ? x == 14 : x == 15;
 				return exp;
-			}
+			};
 
 			var expA = buildExpression();
 			var expB = buildExpression();
@@ -103,10 +103,10 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 		public void IndexAccesses() {
 			IReadOnlyList<int> array = new int[9];
 
-			LambdaExpression buildExpression() {
+			Func<LambdaExpression> buildExpression = () => {
 				Expression<Func<int, bool>> exp = x => x < 9 && array[x] > 2;
 				return exp;
-			}
+			};
 
 			var expA = buildExpression();
 			var expB = buildExpression();
@@ -116,10 +116,10 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 
 		[Test]
 		public void TypeBinary() {
-			LambdaExpression buildExpression() {
+			Func<LambdaExpression> buildExpression = () => {
 				Expression<Func<object, bool>> exp = x => x is string;
 				return exp;
-			}
+			};
 
 			var expA = buildExpression();
 			var expB = buildExpression();
@@ -129,11 +129,10 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 
 		[Test]
 		public void Unary() {
-			LambdaExpression buildExpression()
-			{
+			Func<LambdaExpression> buildExpression = () => {
 				Expression<Func<int, bool>> exp = x => -x > 4;
 				return exp;
-			}
+			};
 
 			var expA = buildExpression();
 			var expB = buildExpression();
@@ -143,11 +142,10 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 
 		[Test]
 		public void New() {
-			LambdaExpression buildExpression()
-			{
+			Func<LambdaExpression> buildExpression = () => {
 				Expression<Func<bool>> exp = () => new object() != new object();
 				return exp;
-			}
+			};
 
 			var expA = buildExpression();
 			var expB = buildExpression();
@@ -157,11 +155,10 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 
 		[Test]
 		public void NewArray() {
-			LambdaExpression buildExpression()
-			{
+			Func<LambdaExpression> buildExpression = () => {
 				Expression<Func<int[]>> exp = () => new int[0];
 				return exp;
-			}
+			};
 
 			var expA = buildExpression();
 			var expB = buildExpression();
@@ -171,11 +168,10 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 
 		[Test]
 		public void NewArrayInit() {
-			LambdaExpression buildExpression()
-			{
+			Func<LambdaExpression> buildExpression = () => {
 				Expression<Func<object>> exp = () => new List<int>() { 2, 3, 5, 7 };
 				return exp;
-			}
+			};
 
 			var expA = buildExpression();
 			var expB = buildExpression();
@@ -185,7 +181,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 
 		[Test]
 		public void ComplexLambda() {
-			Expression<Func<int, bool>> buildExpression() => i => i == 0 || (i < 43 && i > 12 && (i % 3) == 2 && i != 15);
+			Func<Expression<Func<int, bool>>> buildExpression = () => i => i == 0 || (i < 43 && i > 12 && (i % 3) == 2 && i != 15);
 
 			var expA = buildExpression();
 			var expB = buildExpression();

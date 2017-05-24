@@ -130,8 +130,8 @@ namespace MiaPlaza.ExpressionUtils {
 					&& Compare(a.Right, b.Right)
 					&& Compare(a.Conversion, b.Conversion);
 			}
-			protected override bool GetResultFromBlock(BlockExpression a) => throw new NotImplementedException();
-			protected override bool GetResultFromCatchBlock(CatchBlock a) => throw new NotImplementedException();
+			protected override bool GetResultFromBlock(BlockExpression a) { throw new NotImplementedException(); }
+			protected override bool GetResultFromCatchBlock(CatchBlock a) { throw new NotImplementedException(); }
 			protected override bool GetResultFromConditional(ConditionalExpression a) {
 				var b = (ConditionalExpression)other;
 				return Compare(a.Test, b.Test)
@@ -142,12 +142,12 @@ namespace MiaPlaza.ExpressionUtils {
 				var b = (ConstantExpression)other;
 				return IgnoreConstantsValues || Equals(a.Value, b.Value);
 			}
-			protected override bool GetResultFromDebugInfo(DebugInfoExpression a) => throw new NotImplementedException();
+			protected override bool GetResultFromDebugInfo(DebugInfoExpression a) { throw new NotImplementedException(); }
 			protected override bool GetResultFromDefault(DefaultExpression a) => true;
-			protected override bool GetResultFromDynamic(DynamicExpression a) => throw new NotImplementedException();
-			protected override bool GetResultFromElementInit(ElementInit a) => throw new NotImplementedException();
-			protected override bool GetResultFromExtension(Expression a) => throw new NotImplementedException();
-			protected override bool GetResultFromGoto(GotoExpression a) => throw new NotImplementedException();
+			protected override bool GetResultFromDynamic(DynamicExpression a) { throw new NotImplementedException(); }
+			protected override bool GetResultFromElementInit(ElementInit a) { throw new NotImplementedException(); }
+			protected override bool GetResultFromExtension(Expression a) { throw new NotImplementedException(); }
+			protected override bool GetResultFromGoto(GotoExpression a) { throw new NotImplementedException(); }
 			protected override bool GetResultFromIndex(IndexExpression a) {
 				var b = (IndexExpression)other;
 				return a.Indexer == b.Indexer
@@ -159,8 +159,8 @@ namespace MiaPlaza.ExpressionUtils {
 				return a.Expression == b.Expression
 					&& a.Arguments.SequenceEqualOrBothNull(b.Arguments, Compare);
 			}
-			protected override bool GetResultFromLabel(LabelExpression a) => throw new NotImplementedException();
-			protected override bool GetResultFromLabelTarget(LabelTarget a) => throw new NotImplementedException();
+			protected override bool GetResultFromLabel(LabelExpression a) { throw new NotImplementedException(); }
+			protected override bool GetResultFromLabelTarget(LabelTarget a) { throw new NotImplementedException(); }
 			protected override bool GetResultFromLambda<D>(Expression<D> a) {
 				var b = (Expression<D>)other;
 				return a.ReturnType == b.ReturnType
@@ -174,7 +174,7 @@ namespace MiaPlaza.ExpressionUtils {
 						ia.AddMethod == ib.AddMethod
 						&& ia.Arguments.SequenceEqualOrBothNull(ib.Arguments, Compare));
 			}
-			protected override bool GetResultFromLoop(LoopExpression a) => throw new NotImplementedException();
+			protected override bool GetResultFromLoop(LoopExpression a) { throw new NotImplementedException(); }
 			protected override bool GetResultFromMember(MemberExpression a) {
 				var b = (MemberExpression)other;
 				return a.Member == b.Member
@@ -208,10 +208,10 @@ namespace MiaPlaza.ExpressionUtils {
 				return a.IsByRef == b.IsByRef
 					&& a.Name == b.Name;
 			}
-			protected override bool GetResultFromRuntimeVariables(RuntimeVariablesExpression a) => throw new NotImplementedException();
-			protected override bool GetResultFromSwitch(SwitchExpression a) => throw new NotImplementedException();
-			protected override bool GetResultFromSwitchCase(SwitchCase a) => throw new NotImplementedException();
-			protected override bool GetResultFromTry(TryExpression a) => throw new NotImplementedException();
+			protected override bool GetResultFromRuntimeVariables(RuntimeVariablesExpression a) { throw new NotImplementedException(); }
+			protected override bool GetResultFromSwitch(SwitchExpression a) { throw new NotImplementedException(); }
+			protected override bool GetResultFromSwitchCase(SwitchCase a) { throw new NotImplementedException(); }
+			protected override bool GetResultFromTry(TryExpression a) { throw new NotImplementedException(); }
 			protected override bool GetResultFromTypeBinary(TypeBinaryExpression a) {
 				var b = (TypeBinaryExpression)other;
 				return a.TypeOperand == b.TypeOperand

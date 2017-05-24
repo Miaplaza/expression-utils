@@ -13,10 +13,13 @@ namespace MiaPlaza.ExpressionUtils.Expanding {
 			/// <remarks>
 			/// This method is not needed for <see cref="Eval{R}(Expression{Func{R}})"/>.
 			/// </remarks>
-			public object Evaluate(Expression unparametrizedExpression) => throw new NotImplementedException();
-			public VariadicArrayParametersDelegate EvaluateLambda(LambdaExpression lambdaExpression) 
-				=> throw new InvalidOperationException("No evaluator set for handling 'Eval' calls!");
-			public DELEGATE EvaluateTypedLambda<DELEGATE>(Expression<DELEGATE> expression) where DELEGATE : class => throw new NotImplementedException();
+			public object Evaluate(Expression unparametrizedExpression) { throw new NotImplementedException(); }
+			public VariadicArrayParametersDelegate EvaluateLambda(LambdaExpression lambdaExpression) {
+				throw new InvalidOperationException("No evaluator set for handling 'Eval' calls!");
+			}
+			public DELEGATE EvaluateTypedLambda<DELEGATE>(Expression<DELEGATE> expression) where DELEGATE : class {
+				throw new NotImplementedException();
+			}
 		}
 
 		/// <summary>
