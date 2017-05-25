@@ -2,13 +2,13 @@
 <package >
   <metadata>
     <id>MiaPlaza.ExpressionUtils</id>
-    <version>1.1.0</version>
+    <version>1.1.2</version>
     <authors>Khazuar</authors>
     <licenseUrl>https://raw.githubusercontent.com/Miaplaza/expression-utils/master/LICENSE</licenseUrl>
     <projectUrl>https://github.com/Miaplaza/expression-utils</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Efficient Processing, Compilation, and Execution of Expression Trees at Runtime</description>
-    <releaseNotes>Added typed evaluation and some performance improvements for structure comparison and cached compilation.</releaseNotes>
+    <releaseNotes>Added support for `Quote`-expressions</releaseNotes>
     <tags>Expression Expressions Linq.Expressions Evaluation Compile Compiler Execute Execution Compare Comparison</tags>
   </metadata>
 </package>
