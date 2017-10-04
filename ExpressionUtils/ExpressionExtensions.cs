@@ -37,7 +37,7 @@ namespace MiaPlaza.ExpressionUtils {
 		/// </summary>
 		public static bool CouldBeNull(this Expression exp){
 			if (exp.IsConstant()) {
-				return !exp.IsConstant(null);
+				return exp.IsConstant(null);
 			}
 			return !exp.Type.IsValueType || Nullable.GetUnderlyingType(exp.Type) != null;
 		}
