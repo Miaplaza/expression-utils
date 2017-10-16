@@ -193,5 +193,12 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 
 			evaluator.EvaluateLambda(expression)(14);
 		}
+
+		[Test]
+		public void TestNullableEquality() {
+			Expression<Func<DateTime?, bool>> hasValue = date => date != null;
+			Assert.That((bool)evaluator.EvaluateLambda(hasValue)(DateTime.Now));
+			Assert.IsFalse((bool)(evaluator.EvaluateLambda(hasValue)((DateTime?)null)));
+		}
 	}
 }
