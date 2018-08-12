@@ -114,7 +114,7 @@ namespace MiaPlaza.ExpressionUtils.Expanding {
 			public override Expression Expand(MethodCallExpression methodCallExpression, IExpressionEvaluator evaluator) {
 				// The first argument of any 'Eval' call is always the expression to be evaluated.
 				// Its retrival must not throw exceptions (unless in an invalid subtree).
-				var lambda = evaluator.Evaluate(methodCallExpression.Arguments[0]) as LambdaExpression;
+				var lambda = (LambdaExpression)evaluator.Evaluate(methodCallExpression.Arguments[0]);
 
 				var substituted = ParameterSubstituter.SubstituteParameter(
 					lambda,
