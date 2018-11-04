@@ -50,6 +50,15 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			Assert.AreEqual(expected: 1042, actual: evaluator.Evaluate(expr.Body));
 		}
 
+		[Test]
+		public void TestArrayIndexExpression()
+		{
+			var testArray = Enumerable.Range(0,10).ToArray();
+			var indexVariable = 5;
+			Expression<Func<int>> expr = () => testArray[indexVariable];
+			Assert.AreEqual(expected: 5, actual: evaluator.Evaluate(expr.Body));
+		}
+
 		bool throwsException() {
 			throw new Exception();
 		}
@@ -107,10 +116,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			Assert.AreEqual(expected: 1, actual: evaluator.Evaluate(expression.Body));
 
 			value = null;
-			try {
-				evaluator.Evaluate(expression.Body);
-				Assert.Fail();
-			} catch { }
+			Assert.Catch(() => evaluator.Evaluate(expression.Body));
 		}
 
 		public static readonly IEnumerable<int> TestOffsets = new[] {
