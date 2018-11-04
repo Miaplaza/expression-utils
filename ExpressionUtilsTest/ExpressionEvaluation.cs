@@ -59,7 +59,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			Assert.AreEqual(expected: 5, actual: evaluator.Evaluate(expr.Body));
 		}
 
-        bool throwsException() {
+		bool throwsException() {
 			throw new Exception();
 		}
 
