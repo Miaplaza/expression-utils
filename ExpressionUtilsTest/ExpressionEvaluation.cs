@@ -116,9 +116,8 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			Assert.AreEqual(expected: 1, actual: evaluator.Evaluate(expression.Body));
 
 			value = null;
-		    Assert.Catch(() => evaluator.Evaluate(expression.Body));
-		   
-        }
+			Assert.Catch(() => evaluator.Evaluate(expression.Body));
+		}
 
 		public static readonly IEnumerable<int> TestOffsets = new[] {
 			1,
