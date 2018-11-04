@@ -118,6 +118,8 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 							return left << right;
 						case ExpressionType.RightShift:
 							return left >> right;
+                        case ExpressionType.ArrayIndex:
+                            return ((Array) left).GetValue(right);
 						default:
 							throw new NotImplementedException(exp.NodeType.ToString());
 					}
