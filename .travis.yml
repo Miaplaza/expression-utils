@@ -1,0 +1,8 @@
+language: csharp
+solution: ExpressionUtils.sln
+install:
+  - nuget restore ExpressionUtils.sln
+  - nuget install NUnit.Runners -OutputDirectory testrunner
+script:
+  - xbuild /p:Configuration=Release ExpressionUtils.sln
+  - mono ./testrunner/NUnit.ConsoleRunner.*/tools/nunit3-console.exe ./ExpressionUtilsTest/ExpressionUtilsTest.csproj
