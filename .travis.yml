@@ -6,3 +6,4 @@ install:
 script:
   - xbuild /p:Configuration=Release ExpressionUtils.sln
   - mono ./testrunner/NUnit.ConsoleRunner.*/tools/nunit3-console.exe ./ExpressionUtilsTest/ExpressionUtilsTest.csproj
+  - nuget pack ./ExpressionUtils/ExpressionUtils.nuspec -Verbosity detailed
