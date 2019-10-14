@@ -1,81 +1,23 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
-    <ProjectGuid>{5F541203-DB86-47D5-8F58-6AB2EB230827}</ProjectGuid>
-    <OutputType>Library</OutputType>
     <RootNamespace>MiaPlaza.ExpressionUtils</RootNamespace>
-    <AssemblyName>ExpressionUtils</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <TargetFrameworks>netcoreapp3.0</TargetFrameworks>
+    <LangVersion>8</LangVersion>
+    <AssemblyTitle>ExpressionUtils</AssemblyTitle>
+    <Company>MiaPlaza</Company>
+    <Product>MiaPlaza.ExpressionUtils.Properties</Product>
+    <Description>Efficient Processing, Compilation, and Execution of Expression Trees at Runtime</Description>
+    <Copyright>Copyright ©2017-2019 Miaplaza Inc.</Copyright>
+    <Version>1.1.4</Version>
+    <AssemblyVersion>1.1.4</AssemblyVersion>
+    <FileVersion>1.1.4</FileVersion>
     <ErrorReport>none</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <LangVersion>6</LangVersion>
+    <Authors>Miaplaza Inc.</Authors>
+    <RepositoryUrl>https://github.com/Miaplaza/expression-utils</RepositoryUrl>
+    <PackageIconUrl>https://user-images.githubusercontent.com/373765/48680590-db366200-eb9c-11e8-9732-b415e3576de8.png</PackageIconUrl>
+    <PackageId>MiaPlaza.ExpressionUtils</PackageId>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Miaplaza/expression-utils</PackageProjectUrl>
+    <PackageTags>Expression;Expressions;Linq.Expressions;Evaluation;Compile;Compiler;Execute;Execution;Compare;Comparison</PackageTags>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
-    <OutputPath>lib\net45\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>none</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="ConstantExtractor.cs" />
-    <Compile Include="Delegates.cs" />
-    <Compile Include="EnumerableExtension.cs" />
-    <Compile Include="Evaluating\ExpressionCompiler.cs" />
-    <Compile Include="Evaluating\DynamicEvaluationException.cs" />
-    <Compile Include="Evaluating\IExpressionEvaluator.cs" />
-    <Compile Include="Expanding\Attributes\ExpressionExpandablePropertyAttribute.cs" />
-    <Compile Include="Expanding\Attributes\ExpressionExpandableMethodAttribute.cs" />
-    <Compile Include="Expanding\ExpressionExpander.cs" />
-    <Compile Include="ExceptionClosure.cs" />
-    <Compile Include="Expanding\ExpandingException.cs" />
-    <Compile Include="Expanding\ExpressionExpanderVisitor.cs" />
-    <Compile Include="Expanding\ExpandingExtensions.cs" />
-    <Compile Include="Evaluating\CachedExpressionCompiler.cs" />
-    <Compile Include="Evaluating\ExpressionInterpreter.cs" />
-    <Compile Include="ExpressionResultVisitor.cs" />
-    <Compile Include="ExpressionStructureIdentity.cs" />
-    <Compile Include="Hashing.cs" />
-    <Compile Include="NoPartialEvaluationAttribute.cs" />
-    <Compile Include="ParameterListRewriter.cs" />
-    <Compile Include="ParameterSubstituter.cs" />
-    <Compile Include="PartialEvaluator.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ReflectionExtension.cs" />
-    <Compile Include="Simplifier.cs" />
-    <Compile Include="ExpressionExtensions.cs" />
-    <Compile Include="CompiledActivator.cs" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>
