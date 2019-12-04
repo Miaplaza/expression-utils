@@ -107,6 +107,16 @@ namespace MiaPlaza.ExpressionUtils.Expanding {
 			=> (R)evaluator.EvaluateLambda(expression).Invoke(p1, p2, p3, p4, p5, p6);
 
 		/// <summary>
+		/// Evaluates ('calls') a typed expression with the specified arguments. 
+		/// If used in another expression, the subexpression can be inlined using
+		/// the <see cref="SubExpressionExpander"/>. Therefore, cyclic Evals must
+		/// not be used.
+		/// </summary>
+		[ExpanderTypeExpressionExpandableMethod(typeof(SubExpressionExpander))]
+		public static R Eval<R, P1, P2, P3, P4, P5, P6, P7>(this Expression<Func<P1, P2, P3, P4, P5, P6, P7, R>> expression, P1 p1, P2 p2, P3 p3, P4 p4, P5 p5, P6 p6, P7 p7)
+			=> (R)evaluator.EvaluateLambda(expression).Invoke(p1, p2, p3, p4, p5, p6, p7);
+
+		/// <summary>
 		/// Rewrites a call to any of the 'Eval' methods above by inlining the 
 		/// expression that would have been evaluated.
 		/// </summary>
