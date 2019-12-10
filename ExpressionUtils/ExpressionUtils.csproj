@@ -8,9 +8,9 @@
     <Product>MiaPlaza.ExpressionUtils.Properties</Product>
     <Description>Efficient Processing, Compilation, and Execution of Expression Trees at Runtime</Description>
     <Copyright>Copyright ©2017-2019 Miaplaza Inc.</Copyright>
-    <Version>1.1.4</Version>
-    <AssemblyVersion>1.1.4</AssemblyVersion>
-    <FileVersion>1.1.4</FileVersion>
+    <Version>1.1.5</Version>
+    <AssemblyVersion>1.1.5</AssemblyVersion>
+    <FileVersion>1.1.5</FileVersion>
     <ErrorReport>none</ErrorReport>
     <Authors>Miaplaza Inc.</Authors>
     <RepositoryUrl>https://github.com/Miaplaza/expression-utils</RepositoryUrl>
