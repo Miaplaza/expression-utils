@@ -38,8 +38,11 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 					Expression.Lambda(
 						extractionResult.ConstantfreeExpression.Body,
 						extractionResult.ConstantfreeExpression.Parameters.Concat(lambda.Parameters)))
-					.Compile();
-				delegates.TryAdd(lambda, compiled);
+						.Compile();
+
+				var key = buildCacheKey(extractionResult, lambda.Parameters);
+				
+				delegates.TryAdd(key, compiled);
 				constants = extractionResult.ExtractedConstants;
 			}
 
@@ -51,5 +54,14 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 
 		DELEGATE IExpressionEvaluator.EvaluateTypedLambda<DELEGATE>(Expression<DELEGATE> expression) => CachedCompileTypedLambda(expression);
 		public DELEGATE CachedCompileTypedLambda<DELEGATE>(Expression<DELEGATE> expression) where DELEGATE : class => CachedCompileLambda(expression).WrapDelegate<DELEGATE>();
+
+		private LambdaExpression buildCacheKey(ConstantExtractor.ExtractionResult extractionResult, IReadOnlyCollection<ParameterExpression> parameterExpressions) {
+			var e= ParameterSubstituter.SubstituteParameter(extractionResult.ConstantfreeExpression,
+				extractionResult.ConstantfreeExpression.Parameters.Select(
+						p => p.Type.IsValueType && !(p.Type.IsGenericType && p.Type.GetGenericTypeDefinition() == typeof(Nullable<>)) ? 
+							(Expression) Expression.Constant(CompiledActivator.ForAnyType.Create(p.Type)) :
+							(Expression) Expression.TypeAs(Expression.Constant(null), p.Type)));
+			return Expression.Lambda(e, parameterExpressions);
+		}
 	}
 }
