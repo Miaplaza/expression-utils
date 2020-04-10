@@ -188,5 +188,14 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 
 			Assert.IsTrue(expA.StructuralIdentical(expB));
 		}
+
+		[Test]
+		public void TestClosureLambda() {
+			int variable = 7;
+			Expression<Func<int, bool>> expA = (int a) => a != variable;
+			Expression<Func<int, bool>> expB = (int a) => a != 8;
+
+			Assert.IsFalse(expA.StructuralIdentical(expB, true));
+		}		
 	}
 }

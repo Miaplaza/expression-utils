@@ -61,24 +61,5 @@ namespace MiaPlaza.ExpressionUtils {
 				return constructor.Invoke();
 			}
 		}
-		
-		public static class ForAnyType {
-			private static ConcurrentDictionary<Type, Func<object>> cachedNew = new ConcurrentDictionary<Type, Func<object>>();
-
-			/// <summary>
-			/// Create a <paramref name="t"/> by invoking its default constructor.
-			/// This is much faster than <c>(T)Activator.CreateInstance(t)</c>.
-			/// </summary>
-			public static object Create(Type t) {
-				Func<object> constructor;
-				// We do not need to lock the dictionary; another thread can only overwrite it with the same value
-				if (!cachedNew.TryGetValue(t, out constructor)) {
-
-					constructor = Expression.Lambda<Func<object>>(Expression.TypeAs(Expression.New(t), typeof(object))).Compile();
-					cachedNew[t] = constructor;
-				}
-				return constructor.Invoke();
-			}
-		}
 	}
 }

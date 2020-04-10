@@ -237,7 +237,7 @@ namespace MiaPlaza.ExpressionUtils {
 
 			public int GetHashCode(Expression tree) => GetNodeTypeStructureHashCode(tree, IgnoreConstantsValues, HashCodeExpressionDepth);
 
-			bool IEqualityComparer<Expression>.Equals(Expression x, Expression y) => StructuralIdentical(x, y);
+			bool IEqualityComparer<Expression>.Equals(Expression x, Expression y) => StructuralIdentical(x, y, IgnoreConstantsValues);
 		}
 
 		/// <summary>

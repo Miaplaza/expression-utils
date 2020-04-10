@@ -21,14 +21,15 @@ namespace MiaPlaza.ExpressionUtils {
 	/// To that end, the visitor also removes unecessary casts to find the most specific override
 	/// possible (<see cref="VisitUnary"/>.)
 	/// </remarks>
-	public class ParameterSubstituter : ExpressionVisitor {
-		public static Expression SubstituteParameter(LambdaExpression expression, params Expression[] replacements)
+	public class ParameterSubstituter : SimpleParameterSubstituter {
+
+		public static new Expression SubstituteParameter(LambdaExpression expression, params Expression[] replacements)
 			=> SubstituteParameter(expression, replacements as IReadOnlyCollection<Expression>);
 
-		public static Expression SubstituteParameter(LambdaExpression expression, IEnumerable<Expression> replacements)
+		public static new Expression SubstituteParameter(LambdaExpression expression, IEnumerable<Expression> replacements)
 			=> SubstituteParameter(expression, replacements.ToList());
 
-		public static Expression SubstituteParameter(LambdaExpression expression, IReadOnlyCollection<Expression> replacements) {
+		public static new Expression SubstituteParameter(LambdaExpression expression, IReadOnlyCollection<Expression> replacements) {
 			if (expression == null) {
 				throw new ArgumentNullException(nameof(expression));
 			}
@@ -56,20 +57,7 @@ namespace MiaPlaza.ExpressionUtils {
 		public static Expression SubstituteParameter(Expression expression, IReadOnlyDictionary<ParameterExpression, Expression> replacements)
 			=> new ParameterSubstituter(replacements).Visit(expression);
 
-		readonly IReadOnlyDictionary<ParameterExpression, Expression> replacements;
-
-		ParameterSubstituter(IReadOnlyDictionary<ParameterExpression, Expression> replacements) {
-			this.replacements = replacements;
-		}
-
-		protected override Expression VisitParameter(ParameterExpression node) {
-			Expression replacement;
-			if (replacements.TryGetValue(node, out replacement)) {
-				return replacement;
-			} else {
-				return node;
-			}
-		}
+		ParameterSubstituter(IReadOnlyDictionary<ParameterExpression, Expression> replacements) : base(replacements) {	}
 
 		protected override Expression VisitMember(MemberExpression node) {
 			var baseCallResult = (MemberExpression)base.VisitMember(node);
@@ -117,6 +105,10 @@ namespace MiaPlaza.ExpressionUtils {
 				}
 			}
 			return base.VisitUnary(node);
+		}
+
+		protected override Expression VisitBinary(BinaryExpression node) {
+			return base.VisitBinary(node);
 		}
 
 		private static MethodInfo getImplementationToCallOn(Type t, MethodInfo method) {
