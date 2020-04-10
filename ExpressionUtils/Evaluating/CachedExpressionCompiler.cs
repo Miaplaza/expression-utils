@@ -65,12 +65,12 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 		private LambdaExpression getClosureFreeKeyForCaching(ConstantExtractor.ExtractionResult extractionResult, IReadOnlyCollection<ParameterExpression> parameterExpressions) {
 			var e = SimpleParameterSubstituter.SubstituteParameter(extractionResult.ConstantfreeExpression,
 				extractionResult.ConstantfreeExpression.Parameters.Select(
-						p => (Expression) Expression.Constant(GetDefaultValue(p.Type), p.Type)));
+						p => (Expression) Expression.Constant(getDefaultValue(p.Type), p.Type)));
 						
 			return Expression.Lambda(e, parameterExpressions);
 		}
 
-		private object GetDefaultValue(Type t) {
+		private static object getDefaultValue(Type t) {
 			if (t.IsValueType) {
 				return Activator.CreateInstance(t);
 			}
