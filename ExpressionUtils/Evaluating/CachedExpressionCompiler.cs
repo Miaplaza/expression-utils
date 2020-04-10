@@ -3,8 +3,10 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("ExpressionUtilsTest")]
+
 
 namespace MiaPlaza.ExpressionUtils.Evaluating {
 	/// <summary>
@@ -40,8 +42,8 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 						extractionResult.ConstantfreeExpression.Parameters.Concat(lambda.Parameters)))
 						.Compile();
 
-				var key = buildCacheKey(extractionResult, lambda.Parameters);
-				
+				var key = getClosureFreeKeyForCaching(extractionResult, lambda.Parameters);
+
 				delegates.TryAdd(key, compiled);
 				constants = extractionResult.ExtractedConstants;
 			}
@@ -55,13 +57,32 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 		DELEGATE IExpressionEvaluator.EvaluateTypedLambda<DELEGATE>(Expression<DELEGATE> expression) => CachedCompileTypedLambda(expression);
 		public DELEGATE CachedCompileTypedLambda<DELEGATE>(Expression<DELEGATE> expression) where DELEGATE : class => CachedCompileLambda(expression).WrapDelegate<DELEGATE>();
 
-		private LambdaExpression buildCacheKey(ConstantExtractor.ExtractionResult extractionResult, IReadOnlyCollection<ParameterExpression> parameterExpressions) {
-			var e= ParameterSubstituter.SubstituteParameter(extractionResult.ConstantfreeExpression,
+
+		/// <summary>
+		/// A closure free expression tree that can be used as a caching key. Can be used with the <see cref="ExpressionComparing.StructuralComparer" /> to compare
+		/// to the original lambda expression.
+		/// </summary>
+		private LambdaExpression getClosureFreeKeyForCaching(ConstantExtractor.ExtractionResult extractionResult, IReadOnlyCollection<ParameterExpression> parameterExpressions) {
+			var e = SimpleParameterSubstituter.SubstituteParameter(extractionResult.ConstantfreeExpression,
 				extractionResult.ConstantfreeExpression.Parameters.Select(
-						p => p.Type.IsValueType && !(p.Type.IsGenericType && p.Type.GetGenericTypeDefinition() == typeof(Nullable<>)) ? 
-							(Expression) Expression.Constant(CompiledActivator.ForAnyType.Create(p.Type)) :
-							(Expression) Expression.TypeAs(Expression.Constant(null), p.Type)));
+						p => (Expression) Expression.Constant(GetDefaultValue(p.Type), p.Type)));
+						
 			return Expression.Lambda(e, parameterExpressions);
+		}
+
+		private object GetDefaultValue(Type t) {
+			if (t.IsValueType) {
+				return Activator.CreateInstance(t);
+			}
+
+			return null;
+		}
+		
+		/// <remarks>
+		/// Use for testing only.
+		/// </remarks>
+		internal bool IsCached(LambdaExpression lambda) {
+			return delegates.ContainsKey(lambda);
 		}
 	}
 }

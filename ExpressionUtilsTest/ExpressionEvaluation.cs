@@ -19,6 +19,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			new TestFixtureData(ExpressionCompiler.Instance),
 			new TestFixtureData(CachedExpressionCompiler.Instance),
 			new TestFixtureData(ExpressionInterpreter.Instance),
+			new TestFixtureData(new CachedExpressionCompilerTestEvaluator()),
 		};
 
 		private readonly IExpressionEvaluator evaluator;
@@ -119,6 +120,14 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			Assert.Catch(() => evaluator.Evaluate(expression.Body));
 		}
 
+		[Test]
+		public void TestNullableEnumExpression() {
+			Expression<Func<MyEnum?, bool>> expA = (MyEnum? t) => t == MyEnum.First;
+
+			Assert.IsTrue((bool)evaluator.EvaluateLambda(expA)(MyEnum.First));
+			Assert.IsFalse((bool)evaluator.EvaluateLambda(expA)(MyEnum.Second));
+		}
+
 		public static readonly IEnumerable<int> TestOffsets = new[] {
 			1,
 			100,
@@ -205,6 +214,16 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			Expression<Func<DateTime?, bool>> hasValue = date => date != null;
 			Assert.That((bool)evaluator.EvaluateLambda(hasValue)(DateTime.Now));
 			Assert.IsFalse((bool)(evaluator.EvaluateLambda(hasValue)((DateTime?)null)));
+		}
+
+		class ParentClass {}
+		class ChildClass : ParentClass {}  
+
+		[Test]
+		public void TestConvertExpresssion() {
+			var exp = Expression.Convert(Expression.Constant(new ChildClass()), typeof(ParentClass));
+
+			evaluator.Evaluate(exp);
 		}
 	}
 }
