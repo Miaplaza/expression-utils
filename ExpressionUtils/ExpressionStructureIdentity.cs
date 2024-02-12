@@ -76,7 +76,13 @@ namespace MiaPlaza.ExpressionUtils {
 				Hashing.Hash(ref ResultHash, node.Method.GetHashCode());
 				return base.VisitMethodCall(node);
 			}
-		}
+
+            protected override Expression VisitTypeBinary(TypeBinaryExpression node)
+            {
+                Hashing.Hash(ref ResultHash, node.TypeOperand.GetHashCode());
+                return base.VisitTypeBinary(node);
+            }
+        }
 
 		/// <summary>
 		/// A visitor that compares two expressions with each other.
