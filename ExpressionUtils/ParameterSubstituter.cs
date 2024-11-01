@@ -26,11 +26,8 @@ namespace MiaPlaza.ExpressionUtils {
 		public static new Expression SubstituteParameter(LambdaExpression expression, params Expression[] replacements)
 			=> SubstituteParameter(expression, replacements as IReadOnlyCollection<Expression>);
 
-		public static new Expression SubstituteParameter(LambdaExpression expression, IEnumerable<Expression> replacements)
-			=> SubstituteParameter(expression, replacements.ToList());
-
-		public static new Expression SubstituteParameter(LambdaExpression expression, IReadOnlyCollection<Expression> replacements) {
-			if (expression == null) {
+		public static Expression SubstituteParameter(LambdaParts expression, IReadOnlyCollection<Expression> replacements) {
+			if (expression == null || expression.Body == null || expression.Parameters == null) {
 				throw new ArgumentNullException(nameof(expression));
 			}
 

@@ -21,13 +21,15 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 	/// the result via a closure and a delegate capturing the actual parameters of the original expression is returned.
 	/// </remarks>
 	public class CachedExpressionCompiler : IExpressionEvaluator {
-		static ConcurrentDictionary<LambdaExpression, ParameterListDelegate> delegates = new ConcurrentDictionary<LambdaExpression, ParameterListDelegate>(new ExpressionComparing.StructuralComparer(ignoreConstantsValues: true));
+		static ConcurrentDictionary<LambdaParts, ParameterListDelegate> delegates = new ConcurrentDictionary<LambdaParts, ParameterListDelegate>(new LambdaPartsComparer());
+
 		public static readonly CachedExpressionCompiler Instance = new CachedExpressionCompiler();
 
 		private CachedExpressionCompiler() { }
 
-		VariadicArrayParametersDelegate IExpressionEvaluator.EvaluateLambda(LambdaExpression lambdaExpression) => CachedCompileLambda(lambdaExpression);
-		public VariadicArrayParametersDelegate CachedCompileLambda(LambdaExpression lambda) {
+		public VariadicArrayParametersDelegate EvaluateLambda(LambdaExpression lambdaExpression) => CachedCompileLambda(lambdaExpression);
+
+		public VariadicArrayParametersDelegate CachedCompileLambda(LambdaParts lambda) {
 			IReadOnlyList<object> constants;
 
 			ParameterListDelegate compiled;
@@ -51,23 +53,23 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 			return args => compiled(constants.Concat(args).ToArray());
 		}
 
-		object IExpressionEvaluator.Evaluate(Expression unparametrizedExpression) => CachedCompile(unparametrizedExpression);
-		public object CachedCompile(Expression unparametrizedExpression) => CachedCompileLambda(Expression.Lambda(unparametrizedExpression))();
+		public object Evaluate(Expression unparametrizedExpression) => CachedCompile(unparametrizedExpression);
+		public object CachedCompile(Expression unparametrizedExpression) => CachedCompileLambda(new LambdaParts { Body = unparametrizedExpression, Parameters = Array.Empty<ParameterExpression>() })();
 
-		DELEGATE IExpressionEvaluator.EvaluateTypedLambda<DELEGATE>(Expression<DELEGATE> expression) => CachedCompileTypedLambda(expression);
+		public DELEGATE EvaluateTypedLambda<DELEGATE>(Expression<DELEGATE> expression) where DELEGATE : class => CachedCompileTypedLambda(expression);
 		public DELEGATE CachedCompileTypedLambda<DELEGATE>(Expression<DELEGATE> expression) where DELEGATE : class => CachedCompileLambda(expression).WrapDelegate<DELEGATE>();
 
 
 		/// <summary>
-		/// A closure free expression tree that can be used as a caching key. Can be used with the <see cref="ExpressionComparing.StructuralComparer" /> to compare
-		/// to the original lambda expression.
+		/// Creates a closure-free key for caching, represented as a tuple of the expression body and parameter collection.
+		/// Can be used with the <see cref="LambdaPartsComparer" /> to compare to the original lambda expression.
 		/// </summary>
-		private LambdaExpression getClosureFreeKeyForCaching(ConstantExtractor.ExtractionResult extractionResult, IReadOnlyCollection<ParameterExpression> parameterExpressions) {
+		private LambdaParts getClosureFreeKeyForCaching(ConstantExtractor.ExtractionResult extractionResult, IReadOnlyCollection<ParameterExpression> parameterExpressions) {
 			var e = SimpleParameterSubstituter.SubstituteParameter(extractionResult.ConstantfreeExpression,
 				extractionResult.ConstantfreeExpression.Parameters.Select(
 						p => (Expression) Expression.Constant(getDefaultValue(p.Type), p.Type)));
-						
-			return Expression.Lambda(e, parameterExpressions);
+
+			return new LambdaParts { Body = e, Parameters = parameterExpressions };
 		}
 
 		private static object getDefaultValue(Type t) {
@@ -83,6 +85,28 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 		/// </remarks>
 		internal bool IsCached(LambdaExpression lambda) {
 			return delegates.ContainsKey(lambda);
+		}
+
+		/// <summary>
+		/// Previously as a key for <see cref="delegates"/> we were using <see cref="LambdaExpression"/> objects and <see cref="ExpressionComparing.StructuralComparer"/> as a comparer.
+		/// But that required us to make calls to <see cref="Expression.Lambda(Expression, ParameterExpression[])"/> which contains global lock inside, and that started to become a problem.
+		/// So instead we now use <see cref="LambdaParts"/> as a key and pass body and parameters separately, to reduce number of calls to <see cref="Expression.Lambda(Expression, ParameterExpression[])"/>.
+		/// </summary>
+		private class LambdaPartsComparer : IEqualityComparer<LambdaParts> {
+			private IEqualityComparer<Expression> expressionComparer = new ExpressionComparing.StructuralComparer(ignoreConstantsValues: true);
+
+			public bool Equals(LambdaParts x, LambdaParts y) {
+				return x.Body.Type == y.Body.Type
+					&& x.Parameters.SequenceEqualOrBothNull(y.Parameters, expressionComparer.Equals)
+					&& expressionComparer.Equals(x.Body, y.Body);
+			}
+
+			public int GetHashCode(LambdaParts obj) {
+				var hash = Hashing.FnvOffset;
+				Hashing.Hash(ref hash, obj.Body.Type.GetHashCode());
+				Hashing.Hash(ref hash, expressionComparer.GetHashCode(obj.Body));
+				return hash;
+			}
 		}
 	}
 }
