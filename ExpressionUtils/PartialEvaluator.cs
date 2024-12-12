@@ -22,6 +22,12 @@ namespace MiaPlaza.ExpressionUtils {
 		/// <returns>A new tree with sub-trees evaluated and replaced.</returns>
 		public static Expression PartialEval(Expression expression, IExpressionEvaluator evaluator) 
 			=> PartialEval(expression, evaluator, canBeEvaluated);
+		
+		/// <summary>
+		/// Performs evaluation & replacement of independent sub-trees in the body of <see cref="LambdaExpression"/>.
+		/// </summary>
+		public static LambdaExpression PartialEval(LambdaExpression expression, IExpressionEvaluator evaluator)
+			=> (LambdaExpression)PartialEval(expression, evaluator, canBeEvaluated);
 
 		/// <summary>
 		/// Performs evaluation & replacement of independent sub-trees in the body
@@ -31,19 +37,12 @@ namespace MiaPlaza.ExpressionUtils {
 		/// partially evaluate.</param>
 		/// <returns>A new typed <see cref="LambdaExpression"/> with sub-trees in the 
 		/// body evaluated and replaced.</returns>
-		public static Expression<D> PartialEvalBody<D>(Expression<D> expFunc, IExpressionEvaluator evaluator) 
+		/// <remarks>
+		/// Call to <see cref="Expression{TDelegate}.Update(Expression, IEnumerable{ParameterExpression})"/> is very important here.
+		/// It allows expression to keep its original type, even if its body was replaced with <see cref="ExceptionClosure"/> call.
+		/// </remarks>
+		public static Expression<D> PartialEval<D>(Expression<D> expFunc, IExpressionEvaluator evaluator) 
 			=> expFunc.Update(PartialEval(expFunc.Body, evaluator), expFunc.Parameters);
-
-		/// <summary>
-		/// Performs evaluation & replacement of independent sub-trees in the body
-		/// of an <see cref="LambdaExpression"/>.
-		/// </summary>
-		/// <param name="expFunc">The lambda expression whichs body to
-		/// partially evaluate.</param>
-		/// <returns>A new <see cref="LambdaExpression"/> with sub-trees in the body 
-		/// evaluated and replaced.</returns>
-		public static LambdaExpression PartialEvalBody(LambdaExpression expFunc, IExpressionEvaluator evaluator) 
-			=> Expression.Lambda(PartialEval(expFunc.Body, evaluator), expFunc.Parameters);
 
 		private static bool canBeEvaluated(Expression expression) {
 			if (expression.NodeType == ExpressionType.Parameter) {

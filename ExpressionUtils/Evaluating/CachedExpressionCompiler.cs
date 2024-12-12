@@ -21,92 +21,55 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 	/// the result via a closure and a delegate capturing the actual parameters of the original expression is returned.
 	/// </remarks>
 	public class CachedExpressionCompiler : IExpressionEvaluator {
-		static ConcurrentDictionary<LambdaParts, ParameterListDelegate> delegates = new ConcurrentDictionary<LambdaParts, ParameterListDelegate>(new LambdaPartsComparer());
+		static ConcurrentDictionary<Expression, ParameterListDelegate> delegates = new ConcurrentDictionary<Expression, ParameterListDelegate>(new ExpressionComparing.StructuralComparer(ignoreConstantsValues: true));
 
 		public static readonly CachedExpressionCompiler Instance = new CachedExpressionCompiler();
 
 		private CachedExpressionCompiler() { }
 
-		public VariadicArrayParametersDelegate EvaluateLambda(LambdaExpression lambdaExpression) => CachedCompileLambda(lambdaExpression);
+		public VariadicArrayParametersDelegate EvaluateLambda(LambdaExpression lambdaExpression) => CachedCompileExpression(lambdaExpression);
 
-		public VariadicArrayParametersDelegate CachedCompileLambda(LambdaParts lambda) {
+		public VariadicArrayParametersDelegate CachedCompileExpression(Expression expression)
+		{
+			var expressionParts = 
+				expression is LambdaExpression lambda ? 
+					new { lambda.Body,lambda.Parameters }
+					: new { Body = expression, Parameters = Array.Empty<ParameterExpression>().ToList().AsReadOnly() };
+
 			IReadOnlyList<object> constants;
-
 			ParameterListDelegate compiled;
-			if (delegates.TryGetValue(lambda, out compiled)) {
-				constants = ConstantExtractor.ExtractConstantsOnly(lambda.Body);
+
+			if (delegates.TryGetValue(expression, out compiled))
+			{
+				constants = ConstantExtractor.ExtractConstantsOnly(expressionParts.Body);
 			} else {
-				var extractionResult = ConstantExtractor.ExtractConstants(lambda.Body);
+				var extractionResult = ConstantExtractor.ExtractConstants(expressionParts.Body);
 
-				compiled = ParameterListRewriter.RewriteLambda(
-					Expression.Lambda(
-						extractionResult.ConstantfreeExpression.Body,
-						extractionResult.ConstantfreeExpression.Parameters.Concat(lambda.Parameters)))
-						.Compile();
+				compiled = ParameterListRewriter.RewriteLambda(extractionResult.ConstantfreeExpression, extractionResult.Parameters.Concat(expressionParts.Parameters).ToList()).Compile();
 
-				var key = getClosureFreeKeyForCaching(extractionResult, lambda.Parameters);
-
-				delegates.TryAdd(key, compiled);
+				delegates.TryAdd(expression, compiled);
 				constants = extractionResult.ExtractedConstants;
 			}
 
 			return args => compiled(constants.Concat(args).ToArray());
 		}
 
-		public object Evaluate(Expression unparametrizedExpression) => CachedCompile(unparametrizedExpression);
-		public object CachedCompile(Expression unparametrizedExpression) => CachedCompileLambda(new LambdaParts { Body = unparametrizedExpression, Parameters = Array.Empty<ParameterExpression>() })();
-
+		public object Evaluate(Expression unparametrizedExpression) => CachedCompileExpression(unparametrizedExpression)();
 		public DELEGATE EvaluateTypedLambda<DELEGATE>(Expression<DELEGATE> expression) where DELEGATE : class => CachedCompileTypedLambda(expression);
-		public DELEGATE CachedCompileTypedLambda<DELEGATE>(Expression<DELEGATE> expression) where DELEGATE : class => CachedCompileLambda(expression).WrapDelegate<DELEGATE>();
-
-
-		/// <summary>
-		/// Creates a closure-free key for caching, represented as a tuple of the expression body and parameter collection.
-		/// Can be used with the <see cref="LambdaPartsComparer" /> to compare to the original lambda expression.
-		/// </summary>
-		private LambdaParts getClosureFreeKeyForCaching(ConstantExtractor.ExtractionResult extractionResult, IReadOnlyCollection<ParameterExpression> parameterExpressions) {
-			var e = SimpleParameterSubstituter.SubstituteParameter(extractionResult.ConstantfreeExpression,
-				extractionResult.ConstantfreeExpression.Parameters.Select(
-						p => (Expression) Expression.Constant(getDefaultValue(p.Type), p.Type)));
-
-			return new LambdaParts { Body = e, Parameters = parameterExpressions };
-		}
-
-		private static object getDefaultValue(Type t) {
-			if (t.IsValueType) {
-				return Activator.CreateInstance(t);
-			}
-
-			return null;
-		}
+		public DELEGATE CachedCompileTypedLambda<DELEGATE>(Expression<DELEGATE> expression) where DELEGATE : class => CachedCompileExpression(expression).WrapDelegate<DELEGATE>();
 		
 		/// <remarks>
 		/// Use for testing only.
 		/// </remarks>
-		internal bool IsCached(LambdaExpression lambda) {
-			return delegates.ContainsKey(lambda);
+		internal bool IsCached(Expression body) {
+			return delegates.ContainsKey(body);
 		}
 
-		/// <summary>
-		/// Previously as a key for <see cref="delegates"/> we were using <see cref="LambdaExpression"/> objects and <see cref="ExpressionComparing.StructuralComparer"/> as a comparer.
-		/// But that required us to make calls to <see cref="Expression.Lambda(Expression, ParameterExpression[])"/> which contains global lock inside, and that started to become a problem.
-		/// So instead we now use <see cref="LambdaParts"/> as a key and pass body and parameters separately, to reduce number of calls to <see cref="Expression.Lambda(Expression, ParameterExpression[])"/>.
-		/// </summary>
-		private class LambdaPartsComparer : IEqualityComparer<LambdaParts> {
-			private IEqualityComparer<Expression> expressionComparer = new ExpressionComparing.StructuralComparer(ignoreConstantsValues: true);
-
-			public bool Equals(LambdaParts x, LambdaParts y) {
-				return x.Body.Type == y.Body.Type
-					&& x.Parameters.SequenceEqualOrBothNull(y.Parameters, expressionComparer.Equals)
-					&& expressionComparer.Equals(x.Body, y.Body);
-			}
-
-			public int GetHashCode(LambdaParts obj) {
-				var hash = Hashing.FnvOffset;
-				Hashing.Hash(ref hash, obj.Body.Type.GetHashCode());
-				Hashing.Hash(ref hash, expressionComparer.GetHashCode(obj.Body));
-				return hash;
-			}
+		/// <remarks>
+		/// Use for testing only.
+		/// </remarks>
+		internal void ClearCache() {
+			delegates = new ConcurrentDictionary<Expression, ParameterListDelegate>(new ExpressionComparing.StructuralComparer(ignoreConstantsValues: true));
 		}
 	}
 }

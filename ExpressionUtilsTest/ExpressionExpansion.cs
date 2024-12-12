@@ -25,7 +25,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 		[Test]
 		public void SimpleEvalExpandTest() {
 			Expression<Func<int, bool>> predicate = i => squareExpression.Eval(i) > 5;
-			predicate = ExpressionExpanderVisitor.ExpandBody(predicate, ExpressionUtils.Evaluating.ExpressionInterpreter.Instance);
+			predicate = ExpressionExpanderVisitor.Expand(predicate, ExpressionUtils.Evaluating.ExpressionInterpreter.Instance);
 
 			Expression<Func<int, bool>> expected = i => i * i > 5;
 
@@ -37,7 +37,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 		public void RecursiveArgumentEvalExpandTest() {
 			Expression<Func<int, int>> squareSquareExpression = i => squareExpression.Eval(squareExpression.Eval(i));
 
-			squareSquareExpression = ExpressionExpanderVisitor.ExpandBody(squareSquareExpression, ExpressionUtils.Evaluating.ExpressionInterpreter.Instance);
+			squareSquareExpression = ExpressionExpanderVisitor.Expand(squareSquareExpression, ExpressionUtils.Evaluating.ExpressionInterpreter.Instance);
 
 			Expression<Func<int, int>> expected = i => (i * i) * (i * i);
 
@@ -50,7 +50,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			Expression<Func<int, int>> squarePlusOneExpression = i => squareExpression.Eval(i) + 1;
 			Expression<Func<int, bool>> predicate = i => squarePlusOneExpression.Eval(i) > 5;
 
-			predicate = ExpressionExpanderVisitor.ExpandBody(predicate, ExpressionUtils.Evaluating.ExpressionInterpreter.Instance);
+			predicate = ExpressionExpanderVisitor.Expand(predicate, ExpressionUtils.Evaluating.ExpressionInterpreter.Instance);
 
 			Expression<Func<int, bool>> expected = i => i * i + 1 > 5;
 
@@ -64,7 +64,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			Expression<Func<int, bool>> predicate = i => i == valueExpression.Eval();
 
 			// Expanding itself does not throw an exception
-			predicate = ExpressionExpanderVisitor.ExpandBody(predicate, ExpressionUtils.Evaluating.ExpressionInterpreter.Instance);
+			predicate = ExpressionExpanderVisitor.Expand(predicate, ExpressionUtils.Evaluating.ExpressionInterpreter.Instance);
 			
 			// But the exception is thrown when trying to execute it
 			Assert.Throws<CustomExpanderException>(() => predicate.Compile()(42));

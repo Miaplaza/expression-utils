@@ -22,7 +22,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 		public void ConstantEvaluation([ValueSource(nameof(evaluators))]IExpressionEvaluator evaluator) {
 			Expression<Func<bool>> expr = () => true;
 
-			expr = PartialEvaluator.PartialEvalBody(expr, evaluator);
+			expr = PartialEvaluator.PartialEval(expr, evaluator);
 
 			Assert.IsInstanceOf<ConstantExpression>(expr.Body);
 			Assert.AreEqual(expected: true, actual: (expr.Body as ConstantExpression).Value);
@@ -32,7 +32,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 		public void SimpleEvaluation([ValueSource(nameof(evaluators))]IExpressionEvaluator evaluator) {
 			Expression<Func<bool>> expr = () => 42 > 13;
 
-			expr = PartialEvaluator.PartialEvalBody(expr, evaluator);
+			expr = PartialEvaluator.PartialEval(expr, evaluator);
 
 			Assert.IsInstanceOf<ConstantExpression>(expr.Body);
 			Assert.AreEqual(expected: true, actual: (expr.Body as ConstantExpression).Value);
@@ -44,13 +44,13 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 
 			Expression<Func<bool>> expr = () => 42 > x;
 
-			var eval_expr = PartialEvaluator.PartialEvalBody(expr, evaluator);
+			var eval_expr = PartialEvaluator.PartialEval(expr, evaluator);
 
 			Assert.IsInstanceOf<ConstantExpression>(eval_expr.Body);
 			Assert.AreEqual(expected: true, actual: (eval_expr.Body as ConstantExpression).Value);
 
 			x = 50;
-			eval_expr = PartialEvaluator.PartialEvalBody(expr, evaluator);
+			eval_expr = PartialEvaluator.PartialEval(expr, evaluator);
 
 			Assert.IsInstanceOf<ConstantExpression>(eval_expr.Body);
 			Assert.AreEqual(expected: false, actual: (eval_expr.Body as ConstantExpression).Value);
@@ -64,7 +64,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 		public void MethodEvaluation([ValueSource(nameof(evaluators))]IExpressionEvaluator evaluator) {
 			Expression<Func<bool>> expr = () => method(31, 5);
 
-			expr = PartialEvaluator.PartialEvalBody(expr, evaluator);
+			expr = PartialEvaluator.PartialEval(expr, evaluator);
 
 			Assert.IsInstanceOf<ConstantExpression>(expr.Body);
 			Assert.AreEqual(expected: true, actual: (expr.Body as ConstantExpression).Value);
@@ -81,7 +81,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 		public void NonEvaluateableMethodEvaluation([ValueSource(nameof(evaluators))]IExpressionEvaluator evaluator) {
 			Expression<Func<bool>> expr = () => nonEvaluateableMethod(31, 5);
 
-			expr = PartialEvaluator.PartialEvalBody(expr, evaluator);
+			expr = PartialEvaluator.PartialEval(expr, evaluator);
 
 			Assert.IsInstanceOf<MethodCallExpression>(expr.Body);
 			Assert.AreEqual(expected: 2, actual: (expr.Body as MethodCallExpression).Arguments.Count);
@@ -101,7 +101,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			Assert.IsInstanceOf<BinaryExpression>((expr.Body as MethodCallExpression).Arguments[1]);
 			Assert.AreEqual(expected: 2, actual: (((expr.Body as MethodCallExpression).Arguments[1] as BinaryExpression).Left as ConstantExpression).Value);
 
-			expr = PartialEvaluator.PartialEvalBody(expr, evaluator);
+			expr = PartialEvaluator.PartialEval(expr, evaluator);
 
 			Assert.IsInstanceOf<MethodCallExpression>(expr.Body);
 			Assert.AreEqual(expected: 2, actual: (expr.Body as MethodCallExpression).Arguments.Count);

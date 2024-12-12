@@ -22,24 +22,8 @@ namespace MiaPlaza.ExpressionUtils.Expanding {
 		/// </summary>
 		/// <param name="evaluator">An evaluator that can be used by the custom 
 		/// <see cref="ExpressionExpander{EXP}"/>s</param>
-		public static Expression Expand(Expression expr, IExpressionEvaluator evaluator) 
-			=> new ExpressionExpanderVisitor(evaluator).Visit(expr);
-
-		/// <summary>
-		/// Expands the given expression.
-		/// </summary>
-		/// <param name="evaluator">An evaluator that can be used by the custom 
-		/// <see cref="ExpressionExpander{EXP}"/>s</param>
-		public static LambdaExpression ExpandBody(LambdaExpression expr, IExpressionEvaluator evaluator) 
-			=> Expression.Lambda(Expand(expr.Body, evaluator), expr.Parameters);
-
-		/// <summary>
-		/// Expands the given expression.
-		/// </summary>
-		/// <param name="evaluator">An evaluator that can be used by the custom 
-		/// <see cref="ExpressionExpander{EXP}"/>s</param>
-		public static Expression<D> ExpandBody<D>(Expression<D> expr, IExpressionEvaluator evaluator) 
-			=> expr.Update(Expand(expr.Body, evaluator), expr.Parameters);
+		public static TExpression Expand<TExpression>(TExpression expr, IExpressionEvaluator evaluator) where TExpression : Expression
+			=> (TExpression)new ExpressionExpanderVisitor(evaluator).Visit(expr);
 
 		private ExpressionExpanderVisitor(IExpressionEvaluator evaluator) {
 			this.evaluator = evaluator;
