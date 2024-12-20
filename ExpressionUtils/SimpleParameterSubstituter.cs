@@ -13,7 +13,7 @@ namespace MiaPlaza.ExpressionUtils {
 	/// <remarks>
 	/// Does nothing else than that, esepicially does not change the structure of the expression or removes closures.false
 	/// If you want that and other optimizations, use see <cref="ParameterSubstituter" />
-	///	TODO: Make this just a static class and not a visitor. This should not be an expression visitor as it would break if 
+	/// TODO: Make this just a static class and not a visitor. This should not be an expression visitor as it would break if 
 	/// you visit LambdaExpression and try to replace parameter with constant. See: https://github.com/Miaplaza/expression-utils/issues/33
 	/// </remarks>
 	public class SimpleParameterSubstituter : ExpressionVisitor {

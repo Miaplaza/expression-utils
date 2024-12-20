@@ -20,7 +20,7 @@ namespace MiaPlaza.ExpressionUtils {
 	/// read attributes on <c>foo</c> to find out how <c>.foo()</c> can be rendered for the database.
 	/// To that end, the visitor also removes unecessary casts to find the most specific override
 	/// possible (<see cref="VisitUnary"/>.)
-	///	TODO: Make this just a static class and not a visitor. This should not be an expression visitor as it would break if 
+	/// TODO: Make this just a static class and not a visitor. This should not be an expression visitor as it would break if 
 	/// you visit LambdaExpression and try to replace parameter with constant. See: https://github.com/Miaplaza/expression-utils/issues/33
 	/// </remarks>
 	public class ParameterSubstituter : SimpleParameterSubstituter {

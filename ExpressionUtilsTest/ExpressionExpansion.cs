@@ -14,9 +14,9 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 	/// Tests the expansion of expressions
 	/// </summary>
 	[TestFixture]
-	class ExpressionExpansion {
+	internal class ExpressionExpansion {
 		private static readonly Expression<Func<int, int>> squareExpression = i => i * i;
-		
+
 		[SetUp]
 		public void SetEvaluator() {
 			ExpandingExtensions.SetEvaluator(ExpressionUtils.Evaluating.ExpressionInterpreter.Instance);
@@ -29,7 +29,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 
 			Expression<Func<int, bool>> expected = i => i * i > 5;
 
-			Assert.That(predicate.StructuralIdentical(expected), 
+			Assert.That(predicate.StructuralIdentical(expected),
 				$"actual: {predicate.ToString()}, expected: {expected.ToString()}");
 		}
 
@@ -41,7 +41,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 
 			Expression<Func<int, int>> expected = i => (i * i) * (i * i);
 
-			Assert.That(squareSquareExpression.StructuralIdentical(expected), 
+			Assert.That(squareSquareExpression.StructuralIdentical(expected),
 				$"actual: {squareSquareExpression.ToString()}, expected: {expected.ToString()}");
 		}
 
@@ -65,7 +65,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 
 			// Expanding itself does not throw an exception
 			predicate = ExpressionExpanderVisitor.Expand(predicate, ExpressionUtils.Evaluating.ExpressionInterpreter.Instance);
-			
+
 			// But the exception is thrown when trying to execute it
 			Assert.Throws<CustomExpanderException>(() => predicate.Compile()(42));
 		}

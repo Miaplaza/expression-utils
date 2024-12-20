@@ -62,7 +62,7 @@ namespace MiaPlaza.ExpressionUtils.Expanding {
 			if (!(node.Member is PropertyInfo)) {
 				return base.VisitMember(node);
 			}
-			
+
 			var attr = ((PropertyInfo)node.Member).GetCustomAttribute<Attributes.ExpressionExpandablePropertyAttribute>(inherit: false);
 			if (attr == null) {
 				return base.VisitMember(node);

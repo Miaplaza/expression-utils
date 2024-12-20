@@ -1,14 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26403.7
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35327.3
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExpressionUtils", "ExpressionUtils\ExpressionUtils.csproj", "{5F541203-DB86-47D5-8F58-6AB2EB230827}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExpressionUtils", "ExpressionUtils\ExpressionUtils.csproj", "{5F541203-DB86-47D5-8F58-6AB2EB230827}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExpressionUtilsTest", "ExpressionUtilsTest\ExpressionUtilsTest.csproj", "{309D9705-91AF-433B-BEC0-EF1968C89FBF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExpressionUtilsTest", "ExpressionUtilsTest\ExpressionUtilsTest.csproj", "{309D9705-91AF-433B-BEC0-EF1968C89FBF}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{760D3831-1BA5-4B43-951D-CD3053EB6375}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		README.md = README.md
 	EndProjectSection
 EndProject
@@ -29,5 +30,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {690CB3E5-D625-4CED-BFCD-C6E0F2BCC777}
 	EndGlobalSection
 EndGlobal

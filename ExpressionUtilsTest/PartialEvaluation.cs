@@ -8,7 +8,7 @@ using MiaPlaza.ExpressionUtils.Expanding;
 namespace MiaPlaza.Test.ExpressionUtilsTest {
 	[TestFixture]
 	public class PartialEvaluation {
-		static IExpressionEvaluator[] evaluators = {
+		private static readonly IExpressionEvaluator[] evaluators = {
 			ExpressionInterpreter.Instance,
 			CachedExpressionCompiler.Instance,
 		};
@@ -19,7 +19,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 		}
 
 		[Test]
-		public void ConstantEvaluation([ValueSource(nameof(evaluators))]IExpressionEvaluator evaluator) {
+		public void ConstantEvaluation([ValueSource(nameof(evaluators))] IExpressionEvaluator evaluator) {
 			Expression<Func<bool>> expr = () => true;
 
 			expr = PartialEvaluator.PartialEval(expr, evaluator);
@@ -29,7 +29,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 		}
 
 		[Test]
-		public void SimpleEvaluation([ValueSource(nameof(evaluators))]IExpressionEvaluator evaluator) {
+		public void SimpleEvaluation([ValueSource(nameof(evaluators))] IExpressionEvaluator evaluator) {
 			Expression<Func<bool>> expr = () => 42 > 13;
 
 			expr = PartialEvaluator.PartialEval(expr, evaluator);
@@ -39,7 +39,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 		}
 
 		[Test]
-		public void VariableEvaluation([ValueSource(nameof(evaluators))]IExpressionEvaluator evaluator) {
+		public void VariableEvaluation([ValueSource(nameof(evaluators))] IExpressionEvaluator evaluator) {
 			int x = 23;
 
 			Expression<Func<bool>> expr = () => 42 > x;
@@ -61,7 +61,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 		}
 
 		[Test]
-		public void MethodEvaluation([ValueSource(nameof(evaluators))]IExpressionEvaluator evaluator) {
+		public void MethodEvaluation([ValueSource(nameof(evaluators))] IExpressionEvaluator evaluator) {
 			Expression<Func<bool>> expr = () => method(31, 5);
 
 			expr = PartialEvaluator.PartialEval(expr, evaluator);
@@ -78,7 +78,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 		}
 
 		[Test]
-		public void NonEvaluateableMethodEvaluation([ValueSource(nameof(evaluators))]IExpressionEvaluator evaluator) {
+		public void NonEvaluateableMethodEvaluation([ValueSource(nameof(evaluators))] IExpressionEvaluator evaluator) {
 			Expression<Func<bool>> expr = () => nonEvaluateableMethod(31, 5);
 
 			expr = PartialEvaluator.PartialEval(expr, evaluator);
@@ -90,7 +90,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 		}
 
 		[Test]
-		public void NonEvaluateableMethodEvaluationWithEvaluateableSubtrees([ValueSource(nameof(evaluators))]IExpressionEvaluator evaluator) {
+		public void NonEvaluateableMethodEvaluationWithEvaluateableSubtrees([ValueSource(nameof(evaluators))] IExpressionEvaluator evaluator) {
 			int x = 3;
 
 			Expression<Func<bool>> expr = () => nonEvaluateableMethod(31, 2 + x);

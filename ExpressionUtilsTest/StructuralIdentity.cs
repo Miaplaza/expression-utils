@@ -60,7 +60,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			Func<object, Expression<Func<bool>>> factory = delegate (object o) {
 				return () => (5 + 17).Equals(o);
 			};
-			
+
 			var expA = factory(12);
 			var expB = factory(12);
 
@@ -195,6 +195,6 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			Expression<Func<int, bool>> expB = (int a) => a != 8;
 
 			Assert.IsFalse(expA.StructuralIdentical(expB, true));
-		}		
+		}
 	}
 }

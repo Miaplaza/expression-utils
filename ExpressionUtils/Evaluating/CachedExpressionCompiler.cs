@@ -21,7 +21,7 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 	/// the result via a closure and a delegate capturing the actual parameters of the original expression is returned.
 	/// </remarks>
 	public class CachedExpressionCompiler : IExpressionEvaluator {
-		static ConcurrentDictionary<Expression, ParameterListDelegate> delegates = new ConcurrentDictionary<Expression, ParameterListDelegate>(new ExpressionComparing.StructuralComparer(ignoreConstantsValues: true));
+		private static ConcurrentDictionary<Expression, ParameterListDelegate> delegates = new ConcurrentDictionary<Expression, ParameterListDelegate>(new ExpressionComparing.StructuralComparer(ignoreConstantsValues: true));
 
 		public static readonly CachedExpressionCompiler Instance = new CachedExpressionCompiler();
 
@@ -29,25 +29,26 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 
 		public VariadicArrayParametersDelegate EvaluateLambda(LambdaExpression lambdaExpression) => CachedCompileExpression(lambdaExpression);
 
-		public VariadicArrayParametersDelegate CachedCompileExpression(Expression expression)
-		{
-			var expressionParts = 
-				expression is LambdaExpression lambda ? 
-					new { lambda.Body,lambda.Parameters }
+		public VariadicArrayParametersDelegate CachedCompileExpression(Expression expression) {
+			var expressionParts =
+				expression is LambdaExpression lambda ?
+					new { lambda.Body, lambda.Parameters }
 					: new { Body = expression, Parameters = Array.Empty<ParameterExpression>().ToList().AsReadOnly() };
 
 			IReadOnlyList<object> constants;
 			ParameterListDelegate compiled;
 
-			if (delegates.TryGetValue(expression, out compiled))
-			{
+			if (delegates.TryGetValue(expression, out compiled)) {
 				constants = ConstantExtractor.ExtractConstantsOnly(expressionParts.Body);
 			} else {
 				var extractionResult = ConstantExtractor.ExtractConstants(expressionParts.Body);
 
 				compiled = ParameterListRewriter.RewriteLambda(extractionResult.ConstantfreeExpression, extractionResult.Parameters.Concat(expressionParts.Parameters).ToList()).Compile();
 
-				delegates.TryAdd(expression, compiled);
+				// Replace any captured variables with default value, as we will store this as a cache key, so we want to avoid memory leak caused by storage of captured objects.
+				var cacheKey = ConstantValueReplacer.ReplaceConstants(expression, (constant) => Expression.Constant(getDefaultValue(constant.Type), constant.Type));
+
+				delegates.TryAdd(cacheKey, compiled);
 				constants = extractionResult.ExtractedConstants;
 			}
 
@@ -57,7 +58,15 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 		public object Evaluate(Expression unparametrizedExpression) => CachedCompileExpression(unparametrizedExpression)();
 		public DELEGATE EvaluateTypedLambda<DELEGATE>(Expression<DELEGATE> expression) where DELEGATE : class => CachedCompileTypedLambda(expression);
 		public DELEGATE CachedCompileTypedLambda<DELEGATE>(Expression<DELEGATE> expression) where DELEGATE : class => CachedCompileExpression(expression).WrapDelegate<DELEGATE>();
-		
+
+		private static object getDefaultValue(Type t) {
+			if (t.IsValueType) {
+				return Activator.CreateInstance(t);
+			}
+
+			return null;
+		}
+
 		/// <remarks>
 		/// Use for testing only.
 		/// </remarks>
@@ -69,7 +78,7 @@ namespace MiaPlaza.ExpressionUtils.Evaluating {
 		/// Use for testing only.
 		/// </remarks>
 		internal void ClearCache() {
-			delegates = new ConcurrentDictionary<Expression, ParameterListDelegate>(new ExpressionComparing.StructuralComparer(ignoreConstantsValues: true));
+			delegates.Clear();
 		}
 	}
 }

@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace MiaPlaza.ExpressionUtils {
-	class ConstantExtractor : ExpressionVisitor {
+	internal class ConstantExtractor : ExpressionVisitor {
 		public struct ExtractionResult {
 			public readonly Expression ConstantfreeExpression;
 			public readonly IReadOnlyCollection<ParameterExpression> Parameters;
@@ -101,7 +101,7 @@ namespace MiaPlaza.ExpressionUtils {
 			return node.Update(newLeft, null, newRight);
 		}
 #endif
-		
+
 		protected override Expression VisitConstant(ConstantExpression constant) {
 			constants.Add(constant.Value);
 

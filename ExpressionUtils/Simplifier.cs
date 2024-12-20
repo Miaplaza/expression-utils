@@ -7,11 +7,15 @@ namespace MiaPlaza.ExpressionUtils {
 	/// </summary>
 	public class Simplifier : ExpressionVisitor {
 
+		/// <summary>
+		/// Removes unnecessary Binary- and Conditional-Expressions.
+		/// </summary>
+		/// <returns> Modified expression with simplified logic. </returns>
 		public static TExpression Simplify<TExpression>(TExpression expression) where TExpression : Expression {
 			return (TExpression)new Simplifier().Visit(expression);
 		}
 
-		Simplifier() { }
+		private Simplifier() { }
 
 		protected override Expression VisitBinary(BinaryExpression node) {
 			node = visitChildren(node);
