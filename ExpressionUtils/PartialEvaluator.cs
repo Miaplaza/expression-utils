@@ -10,47 +10,17 @@ namespace MiaPlaza.ExpressionUtils {
 		/// Performs evaluation & replacement of independent sub-trees
 		/// </summary>
 		/// <param name="expression">The root of the expression tree.</param>
-		/// <param name="fnCanBeEvaluated">A function that decides whether a given expression node can be part of the local function.</param>
 		/// <returns>A new tree with sub-trees evaluated and replaced.</returns>
-		public static Expression PartialEval(Expression expression, IExpressionEvaluator evaluator, Func<Expression, bool> fnCanBeEvaluated) 
-			=> new SubtreeEvaluator(evaluator, Nominator.Nominate(expression, fnCanBeEvaluated)).Eval(expression);
-
-		/// <summary>
-		/// Performs evaluation & replacement of independent sub-trees
-		/// </summary>
-		/// <param name="expression">The root of the expression tree.</param>
-		/// <returns>A new tree with sub-trees evaluated and replaced.</returns>
-		public static Expression PartialEval(Expression expression, IExpressionEvaluator evaluator) 
-			=> PartialEval(expression, evaluator, canBeEvaluated);
-
-		/// <summary>
-		/// Performs evaluation & replacement of independent sub-trees in the body
-		/// of an typed <see cref="LambdaExpression"/>.
-		/// </summary>
-		/// <param name="expFunc">The lambda expression whichs body to
-		/// partially evaluate.</param>
-		/// <returns>A new typed <see cref="LambdaExpression"/> with sub-trees in the 
-		/// body evaluated and replaced.</returns>
-		public static Expression<D> PartialEvalBody<D>(Expression<D> expFunc, IExpressionEvaluator evaluator) 
-			=> expFunc.Update(PartialEval(expFunc.Body, evaluator), expFunc.Parameters);
-
-		/// <summary>
-		/// Performs evaluation & replacement of independent sub-trees in the body
-		/// of an <see cref="LambdaExpression"/>.
-		/// </summary>
-		/// <param name="expFunc">The lambda expression whichs body to
-		/// partially evaluate.</param>
-		/// <returns>A new <see cref="LambdaExpression"/> with sub-trees in the body 
-		/// evaluated and replaced.</returns>
-		public static LambdaExpression PartialEvalBody(LambdaExpression expFunc, IExpressionEvaluator evaluator) 
-			=> Expression.Lambda(PartialEval(expFunc.Body, evaluator), expFunc.Parameters);
+		public static TExpression PartialEval<TExpression>(TExpression expression, IExpressionEvaluator evaluator) where TExpression : LambdaExpression {
+			return (TExpression) new SubtreeEvaluator(evaluator, Nominator.Nominate(expression.Body, canBeEvaluated)).Eval(expression);
+		}
 
 		private static bool canBeEvaluated(Expression expression) {
 			if (expression.NodeType == ExpressionType.Parameter) {
 				return false;
 			}
 
-			MemberInfo memberAccess = (expression as MethodCallExpression)?.Method 
+			MemberInfo memberAccess = (expression as MethodCallExpression)?.Method
 				?? (expression as NewExpression)?.Constructor
 				?? (expression as MemberExpression)?.Member;
 
@@ -60,16 +30,16 @@ namespace MiaPlaza.ExpressionUtils {
 		/// <summary>
 		/// Evaluates & replaces sub-trees when first candidate is reached (top-down)
 		/// </summary>
-		class SubtreeEvaluator : ExpressionVisitor {
-			readonly HashSet<Expression> candidates;
-			readonly IExpressionEvaluator evaluator;
+		private class SubtreeEvaluator : ExpressionVisitor {
+			private readonly HashSet<Expression> candidates;
+			private readonly IExpressionEvaluator evaluator;
 
 			internal SubtreeEvaluator(IExpressionEvaluator evaluator, HashSet<Expression> candidates) {
 				this.candidates = candidates;
 				this.evaluator = evaluator;
 			}
 
-			internal Expression Eval(Expression exp) {
+			internal Expression Eval(LambdaExpression exp) {
 				return this.Visit(exp);
 			}
 
@@ -77,18 +47,31 @@ namespace MiaPlaza.ExpressionUtils {
 				if (exp == null) {
 					return null;
 				}
+				
 				if (candidates.Contains(exp)) {
 					if (exp is ConstantExpression) {
 						return exp;
 					}
 
-					try {
-						return Expression.Constant(evaluator.Evaluate(exp), exp.Type);
-					} catch (Exception exception) {
-						return ExceptionClosure.MakeExceptionClosureCall(exception, exp.Type);
-					}
+					return evaluate(exp);
 				}
+
 				return base.Visit(exp);
+			}
+
+			private Expression evaluate(Expression exp) {
+				try {
+					/// It seems like the intention of the original author here might have been to use expression return type as the type of constant
+					/// but exp.Type is not that in some cases, so this might be a bug. For example
+					/// <see cref="LambdaExpression.Type"/> would be delegate type of the method, but what we
+					/// would really want as a type of constant is <see cref="LambdaExpression.ReturnType"/>.
+					/// So in case of <see cref="LambdaExpression"/> here this would throw exception, while it could have been evaluated.
+					/// That said, it seems like this is not currently a problem, so just leaving comment here
+					/// for anybody possibly wondering about this in future.
+					return Expression.Constant(evaluator.Evaluate(exp), exp.Type);
+				} catch (Exception exception) {
+					return ExceptionClosure.MakeExceptionClosureCall(exception, exp.Type);
+				}
 			}
 		}
 
@@ -96,10 +79,10 @@ namespace MiaPlaza.ExpressionUtils {
 		/// Performs bottom-up analysis to determine which nodes can possibly
 		/// be part of an evaluated sub-tree.
 		/// </summary>
-		class Nominator : ExpressionVisitor {
+		private class Nominator : ExpressionVisitor {
 			private readonly Func<Expression, bool> fnCanBeEvaluated;
 			private readonly HashSet<Expression> candidates = new HashSet<Expression>();
-			bool canBeEvaluated;
+			private bool canBeEvaluated;
 
 			private Nominator(Func<Expression, bool> fnCanBeEvaluated) {
 				this.fnCanBeEvaluated = fnCanBeEvaluated;

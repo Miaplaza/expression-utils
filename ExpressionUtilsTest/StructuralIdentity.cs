@@ -57,18 +57,17 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 
 		[Test]
 		public void Closures() {
-			Func<object, LambdaExpression> factory = delegate (object o) {
-				Expression<Func<bool>> exp = () => (5 + 17).Equals(o);
-				return exp;
+			Func<object, Expression<Func<bool>>> factory = delegate (object o) {
+				return () => (5 + 17).Equals(o);
 			};
-			
+
 			var expA = factory(12);
 			var expB = factory(12);
 
 			Assert.IsFalse(expA.StructuralIdentical(expB));
 
-			expA = PartialEvaluator.PartialEvalBody(expA, ExpressionUtils.Evaluating.ExpressionInterpreter.Instance);
-			expB = PartialEvaluator.PartialEvalBody(expB, ExpressionUtils.Evaluating.ExpressionInterpreter.Instance);
+			expA = PartialEvaluator.PartialEval(expA, ExpressionUtils.Evaluating.ExpressionInterpreter.Instance);
+			expB = PartialEvaluator.PartialEval(expB, ExpressionUtils.Evaluating.ExpressionInterpreter.Instance);
 
 			Assert.IsTrue(expA.StructuralIdentical(expB));
 		}
@@ -196,6 +195,6 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			Expression<Func<int, bool>> expB = (int a) => a != 8;
 
 			Assert.IsFalse(expA.StructuralIdentical(expB, true));
-		}		
+		}
 	}
 }

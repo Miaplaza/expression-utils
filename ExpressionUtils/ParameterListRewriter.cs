@@ -8,12 +8,12 @@ using System.Threading.Tasks;
 
 namespace MiaPlaza.ExpressionUtils {
 	/// <summary>
-	/// Rewrites a <see cref="LambdaExpression"/> to accept a single parameter <see cref="IReadOnlyList{T}"/> instead of multiple parameters, making handling of the compiled delegates much easier.
+	/// Rewrites a <see cref="LambdaExpression"/> in form of its body and parameters to accept a single parameter <see cref="IReadOnlyList{T}"/> instead of multiple parameters, making handling of the compiled delegates much easier.
 	/// </summary>
-	class ParameterListRewriter : ExpressionVisitor {
-		public static Expression<ParameterListDelegate> RewriteLambda(LambdaExpression expression) {
-			var visitor = new ParameterListRewriter(expression.Parameters);
-			var rewrittenBody = visitor.Visit(expression.Body);
+	internal class ParameterListRewriter : ExpressionVisitor {
+		public static Expression<ParameterListDelegate> RewriteLambda(Expression body, IReadOnlyCollection<ParameterExpression> parameters) {
+			var visitor = new ParameterListRewriter(parameters);
+			var rewrittenBody = visitor.Visit(body);
 			return Expression.Lambda<ParameterListDelegate>(
 				body: Expression.Convert(rewrittenBody, typeof(object)),
 				parameters: visitor.parameter);

@@ -19,6 +19,8 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Miaplaza/expression-utils</PackageProjectUrl>
     <PackageTags>Expression;Expressions;Linq.Expressions;Evaluation;Compile;Compiler;Execute;Execution;Compare;Comparison</PackageTags>
+    <DebugType>embedded</DebugType>
+    <EmbedAllSources>true</EmbedAllSources>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.6.0" />

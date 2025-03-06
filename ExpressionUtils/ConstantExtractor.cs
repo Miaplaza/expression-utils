@@ -6,13 +6,15 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace MiaPlaza.ExpressionUtils {
-	class ConstantExtractor : ExpressionVisitor {
+	internal class ConstantExtractor : ExpressionVisitor {
 		public struct ExtractionResult {
-			public readonly LambdaExpression ConstantfreeExpression;
+			public readonly Expression ConstantfreeExpression;
+			public readonly IReadOnlyCollection<ParameterExpression> Parameters;
 			public readonly IReadOnlyList<object> ExtractedConstants;
 
-			public ExtractionResult(LambdaExpression constantFreeExpression, IReadOnlyList<object> extractedConstants) {
+			public ExtractionResult(Expression constantFreeExpression, IReadOnlyCollection<ParameterExpression> parameters, IReadOnlyList<object> extractedConstants) {
 				ConstantfreeExpression = constantFreeExpression;
+				Parameters = parameters;
 				ExtractedConstants = extractedConstants;
 			}
 		}
@@ -32,7 +34,7 @@ namespace MiaPlaza.ExpressionUtils {
 		public static ExtractionResult ExtractConstants(Expression expression) {
 			var visitor = new ConstantExtractor(rewriteTree: true);
 			var constantFreeBody = visitor.Visit(expression);
-			return new ExtractionResult(Expression.Lambda(constantFreeBody, visitor.parameters), visitor.constants);
+			return new ExtractionResult(constantFreeBody, visitor.parameters, visitor.constants);
 		}
 
 		private ConstantExtractor(bool rewriteTree) {
@@ -99,7 +101,7 @@ namespace MiaPlaza.ExpressionUtils {
 			return node.Update(newLeft, null, newRight);
 		}
 #endif
-		
+
 		protected override Expression VisitConstant(ConstantExpression constant) {
 			constants.Add(constant.Value);
 

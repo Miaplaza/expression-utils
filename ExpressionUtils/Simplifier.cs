@@ -7,19 +7,15 @@ namespace MiaPlaza.ExpressionUtils {
 	/// </summary>
 	public class Simplifier : ExpressionVisitor {
 
-		public static Expression<D> SimplifyBody<D>(Expression<D> expFunc) {
-			return expFunc.Update(Simplify(expFunc.Body), expFunc.Parameters);
+		/// <summary>
+		/// Removes unnecessary Binary- and Conditional-Expressions.
+		/// </summary>
+		/// <returns> Modified expression with simplified logic. </returns>
+		public static TExpression Simplify<TExpression>(TExpression expression) where TExpression : Expression {
+			return (TExpression)new Simplifier().Visit(expression);
 		}
 
-		public static LambdaExpression SimplifyBody(LambdaExpression expFunc) {
-			return Expression.Lambda(Simplify(expFunc.Body), expFunc.Parameters);
-		}
-
-		public static Expression Simplify(Expression expression) {
-			return new Simplifier().Visit(expression);
-		}
-
-		Simplifier() { }
+		private Simplifier() { }
 
 		protected override Expression VisitBinary(BinaryExpression node) {
 			node = visitChildren(node);
