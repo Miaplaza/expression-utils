@@ -56,7 +56,7 @@ namespace MiaPlaza.ExpressionUtils {
 			return new ParameterSubstituter(dict).Visit(expression.Body);
 		}
 
-		public static Expression SubstituteParameter(Expression expression, IReadOnlyDictionary<ParameterExpression, Expression> replacements)
+		public static new Expression SubstituteParameter(Expression expression, IReadOnlyDictionary<ParameterExpression, Expression> replacements)
 			=> new ParameterSubstituter(replacements).Visit(expression);
 
 		ParameterSubstituter(IReadOnlyDictionary<ParameterExpression, Expression> replacements) : base(replacements) {	}
