@@ -1,0 +1,11 @@
+name: Test
+
+on:
+  pull_request:
+
+jobs:
+  greet:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Send greeting
+      run: echo "Hello World"
