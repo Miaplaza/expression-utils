@@ -13,5 +13,5 @@ jobs:
         with:
           dotnet-version: 8.0.x
       - run: dotnet restore ExpressionUtils.sln
-      - run: dotnet build ExpressionUtils.sln --configuration Release --no-restore
+      - run: dotnet build ExpressionUtils.sln --configuration Release --no-restore --warnaserror
       - run: dotnet test ExpressionUtilsTest/ExpressionUtilsTest.csproj --configuration Debug --no-build --verbosity normal
