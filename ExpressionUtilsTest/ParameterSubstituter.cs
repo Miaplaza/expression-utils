@@ -136,6 +136,8 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 
 		private static readonly Expression<Func<int, string, bool>> simpleExpression = (i, s) => i.ToString() == s;
 		private static readonly Expression<Func<bool>> parameterlessExpression = () => true;
+		private static readonly Expression<Func<AttributeTargets, bool>> boxingExpression = (AttributeTargets t) => t.HasFlag(AttributeTargets.Assembly);
+		private static readonly Expression<Func<object, int>> unboxingExpression = (object o) => ((int)o) + 1;
 		private static readonly Expression<Func<IInterface, bool>> interfacePropertyExpression = i => i.Property;
 		private static readonly Expression<Func<IInterface, bool>> interfacePropertyCastExpression = i => ((IInterface)i).Property;
 		private static readonly Expression<Func<IInterface, string>> interfaceMethodExpression = i => i.Method(42);
@@ -172,12 +174,19 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			Assert.Throws<ArgumentException>(() =>
 				ExpressionUtils.ParameterSubstituter.SubstituteParameter(simpleExpression,
 					Expression.Constant(5), Expression.Constant("42"), Expression.Constant(true)));
+			Assert.Throws<ArgumentException>(() =>
+				ExpressionUtils.ParameterSubstituter.SubstituteParameter(boxingExpression,
+					Expression.Constant("Assembly")));
 		}
 
 		[Test]
 		public void TestDoesNotThrowOnValidArguments() {
 			ExpressionUtils.ParameterSubstituter.SubstituteParameter(simpleExpression,
 					Expression.Constant(5), Expression.Constant("42"));
+			ExpressionUtils.ParameterSubstituter.SubstituteParameter(boxingExpression,
+					Expression.Constant(AttributeTargets.All));
+			ExpressionUtils.ParameterSubstituter.SubstituteParameter(unboxingExpression,
+					Expression.Constant((object)42));
 		}
 
 		[Test]
