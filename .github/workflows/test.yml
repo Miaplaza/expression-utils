@@ -1,11 +1,17 @@
 name: Test
 
 on:
+  push:
   pull_request:
 
 jobs:
-  greet:
+  build-test:
     runs-on: ubuntu-latest
     steps:
-    - name: Send greeting
-      run: echo "Hello World"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet restore ExpressionUtils.sln
+      - run: dotnet build ExpressionUtils.sln --configuration Release --no-restore
+      - run: dotnet test ExpressionUtilsTest/ExpressionUtilsTest.csproj --configuration Debug --no-build --verbosity normal

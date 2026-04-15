@@ -79,7 +79,4 @@ To create a new Release:
 
 * bump the version numbers in the project file
 * create a Release here on github
-* `dotnet pack -c Release`
-* `cd ExpressionUtils/bin/Release/`
-* Create an API key for **miaplaza** at https://www.nuget.org/account/apikeys
-* `dotnet nuget push MiaPlaza.ExpressionUtils.….nupgk -k YOUR_KEY_HERE -s -s https://api.nuget.org/v3/index.json`
+* the `publish` GitHub Actions workflow will build, test, pack, and publish to nuget.org

@@ -100,7 +100,9 @@ namespace MiaPlaza.ExpressionUtils {
 				var operand = this.Visit(node.Operand);
 				if (node.Type.IsAssignableFrom(operand.Type)
 					// a cast is lifted if it casts to a Nullable<>
-					&& !node.IsLifted) {
+					&& !node.IsLifted
+					// if this changes a value type to a reference type, then this is a boxing or unboxing which we must not strip
+					&& node.Operand.Type.IsValueType == node.Type.IsValueType) {
 					return operand;
 				} else {
 					return Expression.Convert(operand, node.Type);
