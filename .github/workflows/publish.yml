@@ -19,7 +19,7 @@ jobs:
           dotnet-version: 8.0.x
       - run: dotnet restore ExpressionUtils.sln
       - run: dotnet build ExpressionUtils.sln --configuration Release --no-restore
-      - run: dotnet test ExpressionUtilsTest/ExpressionUtilsTest.csproj --configuration Release --no-build --verbosity normal
+      - run: dotnet test ExpressionUtilsTest/ExpressionUtilsTest.csproj --configuration Debug --no-build --verbosity normal
       - run: dotnet pack ExpressionUtils/ExpressionUtils.csproj --configuration Release --no-build --output ./artifacts
       - uses: NuGet/login@v1
         id: login
