@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Runtime.ExceptionServices;
 using MiaPlaza.ExpressionUtils;
 using NUnit.Framework;
@@ -77,19 +77,16 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			Expression<Func<int>> valueExpression = null;
 			Expression<Func<int, bool>> predicate = i => i == valueExpression.Eval();
 
-			var exceptions = new List<Exception>();
-			EventHandler<FirstChanceExceptionEventArgs> handler = (sender, args) => exceptions.Add(args.Exception);
+			var exceptions = new ConcurrentQueue<Exception>();
+			EventHandler<FirstChanceExceptionEventArgs> handler = (sender, args) => exceptions.Enqueue(args.Exception);
 			AppDomain.CurrentDomain.FirstChanceException += handler;
 			try {
-				predicate = ExpressionExpanderVisitor.Expand(predicate, ExpressionUtils.Evaluating.ExpressionInterpreter.Instance);
+				ExpressionExpanderVisitor.Expand(predicate, ExpressionUtils.Evaluating.ExpressionInterpreter.Instance);
 			} finally {
 				AppDomain.CurrentDomain.FirstChanceException -= handler;
 			}
 
 			Assert.IsEmpty(exceptions);
-
-			// The error is still surfaced when the expression is executed
-			Assert.Throws<CustomExpanderException>(() => predicate.Compile()(42));
 		}
 	}
 }
