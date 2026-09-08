@@ -1,5 +1,6 @@
 using MiaPlaza.ExpressionUtils;
 using System;
+using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using System.Runtime.ExceptionServices;
 using NUnit.Framework;
@@ -129,8 +130,8 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 
 			predicate = ExpressionExpanderVisitor.Expand(predicate, evaluator);
 
-			var exceptions = new System.Collections.Generic.List<Exception>();
-			EventHandler<FirstChanceExceptionEventArgs> handler = (sender, args) => exceptions.Add(args.Exception);
+			var exceptions = new ConcurrentQueue<Exception>();
+			EventHandler<FirstChanceExceptionEventArgs> handler = (sender, args) => exceptions.Enqueue(args.Exception);
 			AppDomain.CurrentDomain.FirstChanceException += handler;
 			try {
 				predicate = PartialEvaluator.PartialEval(predicate, evaluator);

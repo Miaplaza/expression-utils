@@ -59,19 +59,24 @@ namespace MiaPlaza.ExpressionUtils {
 			}
 
 			protected override Expression VisitBinary(BinaryExpression node) {
-				if (node.NodeType == ExpressionType.AndAlso || node.NodeType == ExpressionType.OrElse) {
+				var isShortCircuitingBooleanOperation =
+					(node.NodeType == ExpressionType.AndAlso || node.NodeType == ExpressionType.OrElse)
+					&& node.Method == null
+					&& node.Type == typeof(bool);
+
+				if (isShortCircuitingBooleanOperation) {
 					// Visit the left side first; if it evaluates to a deciding constant, never
 					// visit (and thus never evaluate) the short-circuited right side.
 					var shortCircuitValue = node.NodeType == ExpressionType.OrElse;
 					var left = Visit(node.Left);
 					if (left.IsConstant(shortCircuitValue)) {
-						// true || X  →  true;
-						// false && X  →  false
+						// true || X	→ true;
+						// false && X	→ false
 						return left;
 					}
 					if (left.IsConstant(!shortCircuitValue)) {
-						// false || X  →  X;
-						// true && X  →  X
+						// false || X	→ X;
+						// true && X	→ X
 						return Visit(node.Right);
 					}
 					return node.Update(left, node.Conversion, Visit(node.Right));
