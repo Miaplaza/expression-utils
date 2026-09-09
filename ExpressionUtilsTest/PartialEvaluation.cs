@@ -156,7 +156,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 		/// so the guarded subtree is never evaluated and the whole disjunction collapses.
 		/// </summary>
 		[Test]
-		public void PartialEvalShortCircuitsNullGuardedNullableAccess([ValueSource(nameof(evaluators))] IExpressionEvaluator evaluator) {
+		public void PartialEvalFoldsNullGuardedNullableAccessToTrue([ValueSource(nameof(evaluators))] IExpressionEvaluator evaluator) {
 			DateTime? start = null;
 
 			Expression<Func<Entity, bool>> expr = e => start == null || e.Date >= start.Value;
