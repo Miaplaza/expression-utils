@@ -2,7 +2,6 @@ using MiaPlaza.ExpressionUtils.Evaluating;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace MiaPlaza.ExpressionUtils {
 	public static class PartialEvaluator {
@@ -20,7 +19,7 @@ namespace MiaPlaza.ExpressionUtils {
 				return false;
 			}
 
-			MemberInfo memberAccess = (expression as MethodCallExpression)?.Method
+			var memberAccess = (expression as MethodCallExpression)?.Method
 				?? (expression as NewExpression)?.Constructor
 				?? (expression as MemberExpression)?.Member;
 
@@ -47,7 +46,7 @@ namespace MiaPlaza.ExpressionUtils {
 				if (exp == null) {
 					return null;
 				}
-				
+
 				if (candidates.Contains(exp)) {
 					if (exp is ConstantExpression) {
 						return exp;
@@ -59,8 +58,35 @@ namespace MiaPlaza.ExpressionUtils {
 				return base.Visit(exp);
 			}
 
+			protected override Expression VisitBinary(BinaryExpression node) {
+				var isShortCircuitingBooleanOperation =
+					(node.NodeType == ExpressionType.AndAlso || node.NodeType == ExpressionType.OrElse)
+					&& node.Method == null
+					&& node.Type == typeof(bool);
+
+				if (isShortCircuitingBooleanOperation) {
+					// Visit the left side first; if it evaluates to a deciding constant, never
+					// visit (and thus never evaluate) the short-circuited right side.
+					var shortCircuitValue = node.NodeType == ExpressionType.OrElse;
+					var left = Visit(node.Left);
+					if (left.IsConstant(shortCircuitValue)) {
+						// true || X	→ true;
+						// false && X	→ false
+						return left;
+					}
+					if (left.IsConstant(!shortCircuitValue)) {
+						// false || X	→ X;
+						// true && X	→ X
+						return Visit(node.Right);
+					}
+					return node.Update(left, node.Conversion, Visit(node.Right));
+				}
+				return base.VisitBinary(node);
+			}
+
 			private Expression evaluate(Expression exp) {
 				try {
+					// ReSharper disable InvalidXmlDocComment
 					/// It seems like the intention of the original author here might have been to use expression return type as the type of constant
 					/// but exp.Type is not that in some cases, so this might be a bug. For example
 					/// <see cref="LambdaExpression.Type"/> would be delegate type of the method, but what we
@@ -68,6 +94,7 @@ namespace MiaPlaza.ExpressionUtils {
 					/// So in case of <see cref="LambdaExpression"/> here this would throw exception, while it could have been evaluated.
 					/// That said, it seems like this is not currently a problem, so just leaving comment here
 					/// for anybody possibly wondering about this in future.
+					// ReSharper restore InvalidXmlDocComment
 					return Expression.Constant(evaluator.Evaluate(exp), exp.Type);
 				} catch (Exception exception) {
 					return ExceptionClosure.MakeExceptionClosureCall(exception, exp.Type);
@@ -96,7 +123,7 @@ namespace MiaPlaza.ExpressionUtils {
 
 			public override Expression Visit(Expression expression) {
 				if (expression != null) {
-					bool saveCanBeEvaluated = this.canBeEvaluated;
+					var saveCanBeEvaluated = this.canBeEvaluated;
 					this.canBeEvaluated = true;
 					base.Visit(expression);
 					if (this.canBeEvaluated) {
