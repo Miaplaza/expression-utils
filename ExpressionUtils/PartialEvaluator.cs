@@ -86,13 +86,15 @@ namespace MiaPlaza.ExpressionUtils {
 
 			private Expression evaluate(Expression exp) {
 				try {
-					// It seems like the intention of the original author here might have been to use expression return type as the type of constant
-					// but exp.Type is not that in some cases, so this might be a bug. For example
-					// <see cref="LambdaExpression.Type"/> would be delegate type of the method, but what we
-					// would really want as a type of constant is <see cref="LambdaExpression.ReturnType"/>.
-					// So in case of <see cref="LambdaExpression"/> here this would throw exception, while it could have been evaluated.
-					// That said, it seems like this is not currently a problem, so just leaving comment here
-					// for anybody possibly wondering about this in future.
+					// ReSharper disable InvalidXmlDocComment
+					/// It seems like the intention of the original author here might have been to use expression return type as the type of constant
+					/// but exp.Type is not that in some cases, so this might be a bug. For example
+					/// <see cref="LambdaExpression.Type"/> would be delegate type of the method, but what we
+					/// would really want as a type of constant is <see cref="LambdaExpression.ReturnType"/>.
+					/// So in case of <see cref="LambdaExpression"/> here this would throw exception, while it could have been evaluated.
+					/// That said, it seems like this is not currently a problem, so just leaving comment here
+					/// for anybody possibly wondering about this in future.
+					// ReSharper restore InvalidXmlDocComment
 					return Expression.Constant(evaluator.Evaluate(exp), exp.Type);
 				} catch (Exception exception) {
 					return ExceptionClosure.MakeExceptionClosureCall(exception, exp.Type);
