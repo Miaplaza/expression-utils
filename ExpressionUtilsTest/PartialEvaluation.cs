@@ -130,16 +130,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 
 			predicate = ExpressionExpanderVisitor.Expand(predicate, evaluator);
 
-			var exceptions = new ConcurrentQueue<Exception>();
-			EventHandler<FirstChanceExceptionEventArgs> handler = (sender, args) => exceptions.Enqueue(args.Exception);
-			AppDomain.CurrentDomain.FirstChanceException += handler;
-			try {
-				predicate = PartialEvaluator.PartialEval(predicate, evaluator);
-			} finally {
-				AppDomain.CurrentDomain.FirstChanceException -= handler;
-			}
-
-			Assert.IsEmpty(exceptions);
+			predicate = partialEvalWithoutExceptions(predicate, evaluator);
 
 			var entity = new Entity {
 				Id = 1,
@@ -192,6 +183,150 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			var comparison = (BinaryExpression)result.Body;
 			Assert.AreEqual(expected: ExpressionType.GreaterThanOrEqual, actual: comparison.NodeType);
 			Assert.AreEqual(expected: start.Value, actual: ((ConstantExpression)comparison.Right).Value);
+		}
+
+		[Test]
+		public void PartialEvalDropsLeftSideWhenRightSideDecidesDisjunction([ValueSource(nameof(evaluators))] IExpressionEvaluator evaluator) {
+			DateTime? start = null;
+
+			Expression<Func<Entity, bool>> expr = e => e.Id > 0 || start == null;
+
+			var result = PartialEvaluator.PartialEval(expr, evaluator);
+
+			// X || true → true
+			Assert.IsInstanceOf<ConstantExpression>(result.Body);
+			Assert.AreEqual(expected: true, actual: ((ConstantExpression)result.Body).Value);
+		}
+
+		[Test]
+		public void PartialEvalDropsLeftSideWhenRightSideDecidesConjunction([ValueSource(nameof(evaluators))] IExpressionEvaluator evaluator) {
+			DateTime? start = null;
+
+			Expression<Func<Entity, bool>> expr = e => e.Id > 0 && start != null;
+
+			var result = PartialEvaluator.PartialEval(expr, evaluator);
+
+			// X && false → false
+			Assert.IsInstanceOf<ConstantExpression>(result.Body);
+			Assert.AreEqual(expected: false, actual: ((ConstantExpression)result.Body).Value);
+		}
+
+		[Test]
+		public void PartialEvalDropsNeutralRightSideOfConjunction([ValueSource(nameof(evaluators))] IExpressionEvaluator evaluator) {
+			DateTime? start = null;
+
+			Expression<Func<Entity, bool>> expr = e => e.Id > 0 && start == null;
+
+			var result = PartialEvaluator.PartialEval(expr, evaluator);
+
+			// X && true → X
+			Assert.IsInstanceOf<BinaryExpression>(result.Body);
+			Assert.AreEqual(expected: ExpressionType.GreaterThan, actual: result.Body.NodeType);
+		}
+
+		[Test]
+		public void PartialEvalDropsNeutralRightSideOfDisjunction([ValueSource(nameof(evaluators))] IExpressionEvaluator evaluator) {
+			DateTime? start = null;
+
+			Expression<Func<Entity, bool>> expr = e => e.Id > 0 || start != null;
+
+			var result = PartialEvaluator.PartialEval(expr, evaluator);
+
+			// X || false → X
+			Assert.IsInstanceOf<BinaryExpression>(result.Body);
+			Assert.AreEqual(expected: ExpressionType.GreaterThan, actual: result.Body.NodeType);
+		}
+
+		[Test]
+		public void PartialEvalKeepsUndecidedShortCircuitOperation([ValueSource(nameof(evaluators))] IExpressionEvaluator evaluator) {
+			DateTime? start = new DateTime(2026, 9, 7);
+
+			Expression<Func<Entity, bool>> expr = e => e.Id > 0 && e.Date >= start.Value;
+
+			var result = PartialEvaluator.PartialEval(expr, evaluator);
+
+			Assert.AreEqual(expected: ExpressionType.AndAlso, actual: result.Body.NodeType);
+			var right = (BinaryExpression)((BinaryExpression)result.Body).Right;
+			Assert.AreEqual(expected: start.Value, actual: ((ConstantExpression)right.Right).Value);
+		}
+
+		/// <summary>
+		/// The conditional counterpart of the null-guard case: the test folds to a constant, so the dead
+		/// branch containing `start.Value` must never be evaluated, and no exception may be thrown.
+		/// </summary>
+		[Test]
+		public void PartialEvalDoesNotEvaluateDeadBranchOfConditional([ValueSource(nameof(evaluators))] IExpressionEvaluator evaluator) {
+			DateTime? start = null;
+
+			// ReSharper disable once SimplifyConditionalTernaryExpression
+			Expression<Func<Entity, bool>> expr = e => start == null ? true : e.Date >= start.Value;
+
+			var result = partialEvalWithoutExceptions(expr, evaluator);
+
+			Assert.IsInstanceOf<ConstantExpression>(result.Body);
+			Assert.AreEqual(expected: true, actual: ((ConstantExpression)result.Body).Value);
+		}
+
+		[Test]
+		public void PartialEvalSelectsFalseBranchOfConditional([ValueSource(nameof(evaluators))] IExpressionEvaluator evaluator) {
+			DateTime? start = null;
+
+			// ReSharper disable once SimplifyConditionalTernaryExpression
+			Expression<Func<Entity, bool>> expr = e => start != null ? e.Date >= start.Value : false;
+
+			var result = partialEvalWithoutExceptions(expr, evaluator);
+
+			Assert.IsInstanceOf<ConstantExpression>(result.Body);
+			Assert.AreEqual(expected: false, actual: ((ConstantExpression)result.Body).Value);
+		}
+
+		[Test]
+		public void PartialEvalStillEvaluatesLiveBranchOfConditional([ValueSource(nameof(evaluators))] IExpressionEvaluator evaluator) {
+			DateTime? start = new DateTime(2026, 9, 7);
+
+			// ReSharper disable once SimplifyConditionalTernaryExpression
+			Expression<Func<Entity, bool>> expr = e => start == null ? false : e.Date >= start.Value;
+
+			var result = PartialEvaluator.PartialEval(expr, evaluator);
+
+			// `start == null` folds to false, so the result is the partially evaluated false-branch.
+			Assert.IsInstanceOf<BinaryExpression>(result.Body);
+			var comparison = (BinaryExpression)result.Body;
+			Assert.AreEqual(expected: ExpressionType.GreaterThanOrEqual, actual: comparison.NodeType);
+			Assert.AreEqual(expected: start.Value, actual: ((ConstantExpression)comparison.Right).Value);
+		}
+
+		[Test]
+		public void PartialEvalKeepsConditionalWithUndecidedTest([ValueSource(nameof(evaluators))] IExpressionEvaluator evaluator) {
+			DateTime? start = new DateTime(2026, 9, 7);
+
+			// ReSharper disable once SimplifyConditionalTernaryExpression
+			Expression<Func<Entity, bool>> expr = e => e.Id > 0 ? e.Date >= start.Value : false;
+
+			var result = PartialEvaluator.PartialEval(expr, evaluator);
+
+			Assert.IsInstanceOf<ConditionalExpression>(result.Body);
+			var conditional = (ConditionalExpression)result.Body;
+			Assert.AreEqual(expected: ExpressionType.GreaterThan, actual: conditional.Test.NodeType);
+			Assert.AreEqual(expected: start.Value, actual: ((ConstantExpression)((BinaryExpression)conditional.IfTrue).Right).Value);
+		}
+
+		/// <summary>
+		/// Partially evaluates <paramref name="expression"/> and asserts that no exception was thrown while
+		/// doing so, not even one that was caught internally (and embedded as an ExceptionClosure).
+		/// </summary>
+		private static TExpression partialEvalWithoutExceptions<TExpression>(TExpression expression, IExpressionEvaluator evaluator) where TExpression : LambdaExpression {
+			var exceptions = new ConcurrentQueue<Exception>();
+			EventHandler<FirstChanceExceptionEventArgs> handler = (sender, args) => exceptions.Enqueue(args.Exception);
+			AppDomain.CurrentDomain.FirstChanceException += handler;
+			try {
+				expression = PartialEvaluator.PartialEval(expression, evaluator);
+			} finally {
+				AppDomain.CurrentDomain.FirstChanceException -= handler;
+			}
+
+			Assert.IsEmpty(exceptions);
+			return expression;
 		}
 
 		private class Entity {

@@ -58,30 +58,68 @@ namespace MiaPlaza.ExpressionUtils {
 				return base.Visit(exp);
 			}
 
+			/// <summary>
+			/// Short-circuiting boolean operations are simplified while they are being evaluated: the left operand
+			/// is visited first and, if it turns out to decide the result, the right operand is never visited and
+			/// therefore never evaluated. This matters because an evaluation candidate on the right might only be
+			/// safe to evaluate under the guard on the left (e.g. <c>start == null || start.Value > x</c>).
+			/// Simplifying after the fact would be too late; the exception would already have been thrown.
+			/// </summary>
 			protected override Expression VisitBinary(BinaryExpression node) {
 				var isShortCircuitingBooleanOperation =
 					(node.NodeType == ExpressionType.AndAlso || node.NodeType == ExpressionType.OrElse)
 					&& node.Method == null
-					&& node.Type == typeof(bool);
+					&& (node.Type == typeof(bool) || node.Type == typeof(bool?));
 
-				if (isShortCircuitingBooleanOperation) {
-					// Visit the left side first; if it evaluates to a deciding constant, never
-					// visit (and thus never evaluate) the short-circuited right side.
-					var shortCircuitValue = node.NodeType == ExpressionType.OrElse;
-					var left = Visit(node.Left);
-					if (left.IsConstant(shortCircuitValue)) {
-						// true || X	→ true;
-						// false && X	→ false
-						return left;
-					}
-					if (left.IsConstant(!shortCircuitValue)) {
-						// false || X	→ X;
-						// true && X	→ X
-						return Visit(node.Right);
-					}
-					return node.Update(left, node.Conversion, Visit(node.Right));
+				if (!isShortCircuitingBooleanOperation) {
+					return base.VisitBinary(node);
 				}
-				return base.VisitBinary(node);
+
+				// The left-hand value that decides the result on its own: true for ||, false for &&.
+				var shortCircuitValue = node.NodeType == ExpressionType.OrElse;
+
+				var left = Visit(node.Left);
+				if (left.IsConstant(shortCircuitValue)) {
+					// true || X	→ true
+					// false && X	→ false
+					return left;
+				}
+				if (left.IsConstant(!shortCircuitValue)) {
+					// false || X	→ X
+					// true && X	→ X
+					return Visit(node.Right);
+				}
+
+				var right = Visit(node.Right);
+				if (right.IsConstant(shortCircuitValue)) {
+					// X || true	→ true
+					// X && false	→ false
+					// X is dropped from the tree even though it was not evaluated, matching the long-standing
+					// behavior of the Simplifier; X is a parameter-dependent predicate, not a side effect.
+					return right;
+				}
+				if (right.IsConstant(!shortCircuitValue)) {
+					// X || false	→ X
+					// X && true	→ X
+					return left;
+				}
+
+				return node.Update(left, node.Conversion, right);
+			}
+
+			/// <summary>
+			/// Same idea as for <see cref="VisitBinary"/>: a test that evaluates to a constant decides which branch is
+			/// live, so the dead branch is never visited and therefore never evaluated.
+			/// </summary>
+			protected override Expression VisitConditional(ConditionalExpression node) {
+				var test = Visit(node.Test);
+				if (test.IsConstant(true)) {
+					return Visit(node.IfTrue);
+				}
+				if (test.IsConstant(false)) {
+					return Visit(node.IfFalse);
+				}
+				return node.Update(test, Visit(node.IfTrue), Visit(node.IfFalse));
 			}
 
 			private Expression evaluate(Expression exp) {
