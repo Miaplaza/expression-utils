@@ -94,8 +94,8 @@ namespace MiaPlaza.ExpressionUtils {
 				if (right.IsConstant(shortCircuitValue)) {
 					// X || true	→ true
 					// X && false	→ false
-					// X is dropped from the tree even though it was not evaluated, matching the long-standing
-					// behavior of the Simplifier; X is a parameter-dependent predicate, not a side effect.
+					// X is dropped from the tree even though it was not evaluated; X is a parameter-dependent
+					// predicate, not a side effect, so removing it does not change the result.
 					return right;
 				}
 				if (right.IsConstant(!shortCircuitValue)) {
