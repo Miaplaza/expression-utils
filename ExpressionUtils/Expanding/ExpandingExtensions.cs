@@ -29,85 +29,85 @@ namespace MiaPlaza.ExpressionUtils.Expanding {
 		/// <remarks>
 		/// <see cref="Eval{R}(Expression{Func{R}})"/> is primarily meant to be used for expression composition.
 		/// Therefore, it should be used inside other expressions and treated like 'method calls' there (with
-		/// the limitation not to use circular calls). Finally, in order to "inline" all the Eval-calls and 
+		/// the limitation not to use circular calls). Finally, in order to "inline" all the Eval-calls and
 		/// 'flatten' the expression tree, one should use the <see cref="ExpressionExpanderVisitor"/>.
 		/// </remarks>
-		public static void SetEvaluator(IExpressionEvaluator evaluator) 
+		public static void SetEvaluator(IExpressionEvaluator evaluator)
 			=> ExpandingExtensions.evaluator = evaluator;
 		private static IExpressionEvaluator evaluator = new ThrowingEvaluator();
 
 		/// <summary>
-		/// Evaluates ('calls') a typed expression without arguments. 
-		/// If used in another expression, the subexpression can be inlined 
-		/// using the <see cref="SubExpressionExpander"/>. Therefore, cyclic 
+		/// Evaluates ('calls') a typed expression without arguments.
+		/// If used in another expression, the subexpression can be inlined
+		/// using the <see cref="SubExpressionExpander"/>. Therefore, cyclic
 		/// Evals must not be used.
 		/// </summary>
 		[ExpanderTypeExpressionExpandableMethod(typeof(SubExpressionExpander))]
-		public static R Eval<R>(this Expression<Func<R>> expression) 
+		public static R Eval<R>(this Expression<Func<R>> expression)
 			=> (R)evaluator.EvaluateLambda(expression).Invoke();
 
 		/// <summary>
-		/// Evaluates ('calls') a typed expression with the specified arguments. 
+		/// Evaluates ('calls') a typed expression with the specified arguments.
 		/// If used in another expression, the subexpression can be inlined using
 		/// the <see cref="SubExpressionExpander"/>. Therefore, cyclic Evals must
 		/// not be used.
 		/// </summary>
 		[ExpanderTypeExpressionExpandableMethod(typeof(SubExpressionExpander))]
-		public static R Eval<R, P1>(this Expression<Func<P1, R>> expression, P1 p1) 
+		public static R Eval<R, P1>(this Expression<Func<P1, R>> expression, P1 p1)
 			=> (R)evaluator.EvaluateLambda(expression).Invoke(p1);
 
 		/// <summary>
-		/// Evaluates ('calls') a typed expression with the specified arguments. 
+		/// Evaluates ('calls') a typed expression with the specified arguments.
 		/// If used in another expression, the subexpression can be inlined using
 		/// the <see cref="SubExpressionExpander"/>. Therefore, cyclic Evals must
 		/// not be used.
 		/// </summary>
 		[ExpanderTypeExpressionExpandableMethod(typeof(SubExpressionExpander))]
-		public static R Eval<R, P1, P2>(this Expression<Func<P1, P2, R>> expression, P1 p1, P2 p2) 
+		public static R Eval<R, P1, P2>(this Expression<Func<P1, P2, R>> expression, P1 p1, P2 p2)
 			=> (R)evaluator.EvaluateLambda(expression).Invoke(p1, p2);
 
 		/// <summary>
-		/// Evaluates ('calls') a typed expression with the specified arguments. 
+		/// Evaluates ('calls') a typed expression with the specified arguments.
 		/// If used in another expression, the subexpression can be inlined using
 		/// the <see cref="SubExpressionExpander"/>. Therefore, cyclic Evals must
 		/// not be used.
 		/// </summary>
 		[ExpanderTypeExpressionExpandableMethod(typeof(SubExpressionExpander))]
-		public static R Eval<R, P1, P2, P3>(this Expression<Func<P1, P2, P3, R>> expression, P1 p1, P2 p2, P3 p3) 
+		public static R Eval<R, P1, P2, P3>(this Expression<Func<P1, P2, P3, R>> expression, P1 p1, P2 p2, P3 p3)
 			=> (R)evaluator.EvaluateLambda(expression).Invoke(p1, p2, p3);
 
 		/// <summary>
-		/// Evaluates ('calls') a typed expression with the specified arguments. 
+		/// Evaluates ('calls') a typed expression with the specified arguments.
 		/// If used in another expression, the subexpression can be inlined using
 		/// the <see cref="SubExpressionExpander"/>. Therefore, cyclic Evals must
 		/// not be used.
 		/// </summary>
 		[ExpanderTypeExpressionExpandableMethod(typeof(SubExpressionExpander))]
-		public static R Eval<R, P1, P2, P3, P4>(this Expression<Func<P1, P2, P3, P4, R>> expression, P1 p1, P2 p2, P3 p3, P4 p4) 
+		public static R Eval<R, P1, P2, P3, P4>(this Expression<Func<P1, P2, P3, P4, R>> expression, P1 p1, P2 p2, P3 p3, P4 p4)
 			=> (R)evaluator.EvaluateLambda(expression).Invoke(p1, p2, p3, p4);
 
 		/// <summary>
-		/// Evaluates ('calls') a typed expression with the specified arguments. 
+		/// Evaluates ('calls') a typed expression with the specified arguments.
 		/// If used in another expression, the subexpression can be inlined using
 		/// the <see cref="SubExpressionExpander"/>. Therefore, cyclic Evals must
 		/// not be used.
 		/// </summary>
 		[ExpanderTypeExpressionExpandableMethod(typeof(SubExpressionExpander))]
-		public static R Eval<R, P1, P2, P3, P4, P5>(this Expression<Func<P1, P2, P3, P4, P5, R>> expression, P1 p1, P2 p2, P3 p3, P4 p4, P5 p5) 
+		public static R Eval<R, P1, P2, P3, P4, P5>(this Expression<Func<P1, P2, P3, P4, P5, R>> expression, P1 p1, P2 p2, P3 p3, P4 p4, P5 p5)
 			=> (R)evaluator.EvaluateLambda(expression).Invoke(p1, p2, p3, p4, p5);
 
 		/// <summary>
-		/// Evaluates ('calls') a typed expression with the specified arguments. 
+		/// Evaluates ('calls') a typed expression with the specified arguments.
 		/// If used in another expression, the subexpression can be inlined using
 		/// the <see cref="SubExpressionExpander"/>. Therefore, cyclic Evals must
 		/// not be used.
 		/// </summary>
 		[ExpanderTypeExpressionExpandableMethod(typeof(SubExpressionExpander))]
-		public static R Eval<R, P1, P2, P3, P4, P5, P6>(this Expression<Func<P1, P2, P3, P4, P5, P6, R>> expression, P1 p1, P2 p2, P3 p3, P4 p4, P5 p5, P6 p6) 
+		public static R Eval<R, P1, P2, P3, P4, P5, P6>(this Expression<Func<P1, P2, P3, P4, P5, P6, R>> expression, P1 p1, P2 p2, P3 p3, P4 p4, P5 p5, P6 p6)
 			=> (R)evaluator.EvaluateLambda(expression).Invoke(p1, p2, p3, p4, p5, p6);
 
 		/// <summary>
-		/// Evaluates ('calls') a typed expression with the specified arguments. 
+		/// Evaluates ('calls') a typed expression with the specified arguments.
 		/// If used in another expression, the subexpression can be inlined using
 		/// the <see cref="SubExpressionExpander"/>. Therefore, cyclic Evals must
 		/// not be used.
@@ -117,7 +117,7 @@ namespace MiaPlaza.ExpressionUtils.Expanding {
 			=> (R)evaluator.EvaluateLambda(expression).Invoke(p1, p2, p3, p4, p5, p6, p7);
 
 		/// <summary>
-		/// Evaluates ('calls') a typed expression with the specified arguments. 
+		/// Evaluates ('calls') a typed expression with the specified arguments.
 		/// If used in another expression, the subexpression can be inlined using
 		/// the <see cref="SubExpressionExpander"/>. Therefore, cyclic Evals must
 		/// not be used.
@@ -127,7 +127,7 @@ namespace MiaPlaza.ExpressionUtils.Expanding {
 			=> (R)evaluator.EvaluateLambda(expression).Invoke(p1, p2, p3, p4, p5, p6, p7, p8);
 
 		/// <summary>
-		/// Evaluates ('calls') a typed expression with the specified arguments. 
+		/// Evaluates ('calls') a typed expression with the specified arguments.
 		/// If used in another expression, the subexpression can be inlined using
 		/// the <see cref="SubExpressionExpander"/>. Therefore, cyclic Evals must
 		/// not be used.
@@ -137,7 +137,7 @@ namespace MiaPlaza.ExpressionUtils.Expanding {
 			=> (R)evaluator.EvaluateLambda(expression).Invoke(p1, p2, p3, p4, p5, p6, p7, p8, p9);
 
 		/// <summary>
-		/// Evaluates ('calls') a typed expression with the specified arguments. 
+		/// Evaluates ('calls') a typed expression with the specified arguments.
 		/// If used in another expression, the subexpression can be inlined using
 		/// the <see cref="SubExpressionExpander"/>. Therefore, cyclic Evals must
 		/// not be used.
@@ -147,7 +147,7 @@ namespace MiaPlaza.ExpressionUtils.Expanding {
 			=> (R)evaluator.EvaluateLambda(expression).Invoke(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
 
 		/// <summary>
-		/// Evaluates ('calls') a typed expression with the specified arguments. 
+		/// Evaluates ('calls') a typed expression with the specified arguments.
 		/// If used in another expression, the subexpression can be inlined using
 		/// the <see cref="SubExpressionExpander"/>. Therefore, cyclic Evals must
 		/// not be used.
@@ -157,7 +157,7 @@ namespace MiaPlaza.ExpressionUtils.Expanding {
 			=> (R)evaluator.EvaluateLambda(expression).Invoke(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11);
 
 		/// <summary>
-		/// Evaluates ('calls') a typed expression with the specified arguments. 
+		/// Evaluates ('calls') a typed expression with the specified arguments.
 		/// If used in another expression, the subexpression can be inlined using
 		/// the <see cref="SubExpressionExpander"/>. Therefore, cyclic Evals must
 		/// not be used.
@@ -167,7 +167,7 @@ namespace MiaPlaza.ExpressionUtils.Expanding {
 			=> (R)evaluator.EvaluateLambda(expression).Invoke(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12);
 
 		/// <summary>
-		/// Evaluates ('calls') a typed expression with the specified arguments. 
+		/// Evaluates ('calls') a typed expression with the specified arguments.
 		/// If used in another expression, the subexpression can be inlined using
 		/// the <see cref="SubExpressionExpander"/>. Therefore, cyclic Evals must
 		/// not be used.
@@ -177,7 +177,7 @@ namespace MiaPlaza.ExpressionUtils.Expanding {
 			=> (R)evaluator.EvaluateLambda(expression).Invoke(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13);
 
 		/// <summary>
-		/// Evaluates ('calls') a typed expression with the specified arguments. 
+		/// Evaluates ('calls') a typed expression with the specified arguments.
 		/// If used in another expression, the subexpression can be inlined using
 		/// the <see cref="SubExpressionExpander"/>. Therefore, cyclic Evals must
 		/// not be used.
@@ -187,7 +187,7 @@ namespace MiaPlaza.ExpressionUtils.Expanding {
 			=> (R)evaluator.EvaluateLambda(expression).Invoke(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14);
 
 		/// <summary>
-		/// Evaluates ('calls') a typed expression with the specified arguments. 
+		/// Evaluates ('calls') a typed expression with the specified arguments.
 		/// If used in another expression, the subexpression can be inlined using
 		/// the <see cref="SubExpressionExpander"/>. Therefore, cyclic Evals must
 		/// not be used.
@@ -197,7 +197,7 @@ namespace MiaPlaza.ExpressionUtils.Expanding {
 			=> (R)evaluator.EvaluateLambda(expression).Invoke(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15);
 
 		/// <summary>
-		/// Evaluates ('calls') a typed expression with the specified arguments. 
+		/// Evaluates ('calls') a typed expression with the specified arguments.
 		/// If used in another expression, the subexpression can be inlined using
 		/// the <see cref="SubExpressionExpander"/>. Therefore, cyclic Evals must
 		/// not be used.
@@ -207,14 +207,23 @@ namespace MiaPlaza.ExpressionUtils.Expanding {
 			=> (R)evaluator.EvaluateLambda(expression).Invoke(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16);
 
 		/// <summary>
-		/// Rewrites a call to any of the 'Eval' methods above by inlining the 
+		/// Rewrites a call to any of the 'Eval' methods above by inlining the
 		/// expression that would have been evaluated.
 		/// </summary>
-		class SubExpressionExpander : ExpressionExpander<MethodCallExpression> {
+		private class SubExpressionExpander : ExpressionExpander<MethodCallExpression> {
 			public override Expression Expand(MethodCallExpression methodCallExpression, IExpressionEvaluator evaluator) {
 				// The first argument of any 'Eval' call is always the expression to be evaluated.
-				// Its retrival must not throw exceptions (unless in an invalid subtree).
+				// Its retrieval must not throw exceptions (unless in an invalid subtree).
 				var lambda = (LambdaExpression)evaluator.Evaluate(methodCallExpression.Arguments[0]);
+
+				if (lambda is null) {
+					return ExceptionClosure.MakeExceptionClosureCall(
+						CustomExpanderException.Create(
+							expander: this,
+							expression: methodCallExpression,
+							exception: new InvalidOperationException("lambda is null")),
+						methodCallExpression.Type);
+				}
 
 				var substituted = ParameterSubstituter.SubstituteParameter(
 					lambda,

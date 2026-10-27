@@ -1,13 +1,10 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Collections.Concurrent;
+using System.Runtime.ExceptionServices;
 using MiaPlaza.ExpressionUtils;
 using NUnit.Framework;
 using System.Linq.Expressions;
 using MiaPlaza.ExpressionUtils.Expanding;
-using MiaPlaza.ExpressionUtils.Expanding.Attributes;
 
 namespace MiaPlaza.Test.ExpressionUtilsTest {
 	/// <summary>
@@ -30,7 +27,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			Expression<Func<int, bool>> expected = i => i * i > 5;
 
 			Assert.That(predicate.StructuralIdentical(expected),
-				$"actual: {predicate.ToString()}, expected: {expected.ToString()}");
+				$"actual: {predicate}, expected: {expected}");
 		}
 
 		[Test]
@@ -42,7 +39,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			Expression<Func<int, int>> expected = i => (i * i) * (i * i);
 
 			Assert.That(squareSquareExpression.StructuralIdentical(expected),
-				$"actual: {squareSquareExpression.ToString()}, expected: {expected.ToString()}");
+				$"actual: {squareSquareExpression}, expected: {expected}");
 		}
 
 		[Test]
@@ -55,7 +52,7 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			Expression<Func<int, bool>> expected = i => i * i + 1 > 5;
 
 			Assert.That(predicate.StructuralIdentical(expected),
-				$"actual: {predicate.ToString()}, expected: {expected.ToString()}");
+				$"actual: {predicate}, expected: {expected}");
 		}
 
 		[Test]
@@ -69,5 +66,28 @@ namespace MiaPlaza.Test.ExpressionUtilsTest {
 			// But the exception is thrown when trying to execute it
 			Assert.Throws<CustomExpanderException>(() => predicate.Compile()(42));
 		}
+
+		/// <summary>
+		/// Expanding an 'Eval' call on a null expression reference must not be exception-driven:
+		/// the failure is embedded as an ExceptionClosure without any exception being thrown
+		/// (and caught) internally. See <see cref="NullEvalExpandTest"/> for the execution behavior.
+		/// </summary>
+		[Test]
+		public void NullEvalExpandDoesNotThrowInternally() {
+			Expression<Func<int>> valueExpression = null;
+			Expression<Func<int, bool>> predicate = i => i == valueExpression.Eval();
+
+			var exceptions = new ConcurrentQueue<Exception>();
+			EventHandler<FirstChanceExceptionEventArgs> handler = (sender, args) => exceptions.Enqueue(args.Exception);
+			AppDomain.CurrentDomain.FirstChanceException += handler;
+			try {
+				ExpressionExpanderVisitor.Expand(predicate, ExpressionUtils.Evaluating.ExpressionInterpreter.Instance);
+			} finally {
+				AppDomain.CurrentDomain.FirstChanceException -= handler;
+			}
+
+			Assert.IsEmpty(exceptions);
+		}
 	}
 }
+
